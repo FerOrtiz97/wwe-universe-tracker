@@ -1,0 +1,317 @@
+/* =========================================================================
+   styles.css
+   -------------------------------------------------------------------------
+   No hay ningún framework de CSS acá (nada de Bootstrap, Tailwind, etc.):
+   todo es CSS normal. Está organizado de arriba hacia abajo más o menos en
+   el mismo orden en que aparecen las cosas en la pantalla: variables de
+   color -> layout general -> navegación -> tarjetas -> tablas -> gráficos.
+   ========================================================================= */
+
+:root {
+  --color-fondo: #0f1115;
+  --color-panel: #1a1d24;
+  --color-panel-claro: #22262f;
+  --color-borde: #2e333d;
+  --color-texto: #e6e6e6;
+  --color-texto-tenue: #9aa1ab;
+
+  --color-raw: #c00000;
+  --color-raw-claro: #3a1414;
+  --color-smackdown: #1565c0;
+  --color-smackdown-claro: #12233b;
+  --color-nxt: #c99700;
+  --color-nxt-claro: #3a2f10;
+  --color-retirado: #6d6d6d;
+  --color-retirado-claro: #2a2a2a;
+
+  --color-acento: #6ee7b7;
+  --color-alerta: #f59e0b;
+  --color-peligro: #ef4444;
+
+  --radio: 10px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: var(--color-fondo);
+  color: var(--color-texto);
+}
+
+/* ---------- Encabezado y navegación ---------- */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  padding: 14px 20px;
+  background: var(--color-panel);
+  border-bottom: 1px solid var(--color-borde);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.topbar h1 {
+  font-size: 18px;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.tab-btn {
+  background: transparent;
+  border: 1px solid var(--color-borde);
+  color: var(--color-texto-tenue);
+  padding: 8px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.tab-btn:hover { color: var(--color-texto); border-color: var(--color-texto-tenue); }
+
+.tab-btn.is-active {
+  background: var(--color-acento);
+  color: #0f1115;
+  border-color: var(--color-acento);
+  font-weight: bold;
+}
+
+.topbar-acciones { display: flex; gap: 8px; }
+
+.topbar-acciones button, .btn-importar {
+  background: var(--color-panel-claro);
+  border: 1px solid var(--color-borde);
+  color: var(--color-texto);
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.btn-importar { display: inline-flex; align-items: center; }
+
+/* ---------- Vistas (una a la vez) ---------- */
+
+main { padding: 20px; max-width: 1200px; margin: 0 auto; }
+
+.vista { display: none; }
+.vista.is-active { display: block; animation: aparecer 0.15s ease-out; }
+
+@keyframes aparecer {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.vista h2 { margin-top: 0; }
+
+/* ---------- Tarjetas de resumen ---------- */
+
+.tarjetas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.tarjeta {
+  background: var(--color-panel);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+  padding: 14px 16px;
+}
+
+.tarjeta .etiqueta {
+  font-size: 12px;
+  color: var(--color-texto-tenue);
+  margin-bottom: 6px;
+}
+
+.tarjeta .valor {
+  font-size: 26px;
+  font-weight: bold;
+}
+
+.tarjeta.raw { border-left: 4px solid var(--color-raw); }
+.tarjeta.smackdown { border-left: 4px solid var(--color-smackdown); }
+.tarjeta.nxt { border-left: 4px solid var(--color-nxt); }
+.tarjeta.retirado { border-left: 4px solid var(--color-retirado); }
+
+/* ---------- Controles (buscar / filtrar / formularios) ---------- */
+
+.controles {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+  align-items: center;
+}
+
+input[type="text"], input[type="number"], select {
+  background: var(--color-panel-claro);
+  border: 1px solid var(--color-borde);
+  color: var(--color-texto);
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+button.accion {
+  background: var(--color-acento);
+  color: #0f1115;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 13px;
+}
+
+button.accion.secundaria {
+  background: var(--color-panel-claro);
+  color: var(--color-texto);
+  border: 1px solid var(--color-borde);
+  font-weight: normal;
+}
+
+button.accion.peligro { background: var(--color-peligro); color: white; }
+
+/* ---------- Tablas ---------- */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-panel);
+  border-radius: var(--radio);
+  overflow: hidden;
+}
+
+th, td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--color-borde);
+  font-size: 13px;
+}
+
+th {
+  background: var(--color-panel-claro);
+  color: var(--color-texto-tenue);
+  font-size: 12px;
+  text-transform: uppercase;
+  cursor: pointer;
+  user-select: none;
+}
+
+tr:hover td { background: rgba(255,255,255,0.03); }
+
+.fila-raw { border-left: 3px solid var(--color-raw); }
+.fila-smackdown { border-left: 3px solid var(--color-smackdown); }
+.fila-nxt { border-left: 3px solid var(--color-nxt); }
+.fila-retirado { border-left: 3px solid var(--color-retirado); opacity: 0.7; }
+
+.chip {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: bold;
+}
+.chip.raw { background: var(--color-raw-claro); color: #ff8f8f; }
+.chip.smackdown { background: var(--color-smackdown-claro); color: #8fc2ff; }
+.chip.nxt { background: var(--color-nxt-claro); color: #ffd66b; }
+.chip.retirado { background: var(--color-retirado-claro); color: #bbb; }
+
+/* ---------- Gráficos simples (barras hechas con <div>, sin librerías) ---------- */
+
+.grafico-barras { display: flex; flex-direction: column; gap: 8px; }
+
+.barra-fila { display: grid; grid-template-columns: 110px 1fr 50px; gap: 10px; align-items: center; font-size: 13px; }
+
+.barra-pista {
+  background: var(--color-panel-claro);
+  border-radius: 6px;
+  height: 14px;
+  overflow: hidden;
+}
+
+.barra-relleno { height: 100%; border-radius: 6px 0 0 6px; }
+
+.panel {
+  background: var(--color-panel);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.panel h3 { margin-top: 0; font-size: 15px; color: var(--color-texto-tenue); }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+@media (max-width: 800px) {
+  .grid-2 { grid-template-columns: 1fr; }
+}
+
+/* ---------- Formularios modales sencillos (sin <dialog> para más soporte) ---------- */
+
+.form-linea { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.form-linea label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--color-texto-tenue); }
+
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--color-panel-claro);
+  border: 1px solid var(--color-acento);
+  color: var(--color-texto);
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+.texto-tenue { color: var(--color-texto-tenue); font-size: 12px; }
+
+/* ---------- v1.0: formularios, acciones y tablas responsive ---------- */
+.panel-header { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px; }
+.panel-header h3 { margin:0; }
+.form-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:14px; }
+.form-grid label { display:flex; flex-direction:column; gap:5px; color:var(--color-texto-tenue); font-size:12px; }
+.form-grid input, .form-grid select, .form-linea input, .form-linea select { width:100%; }
+.check-group { display:flex; flex-wrap:wrap; align-items:center; gap:10px 16px; margin:10px 0 16px; }
+.check { display:inline-flex; align-items:center; gap:6px; color:var(--color-texto); font-size:13px; }
+.check input { width:18px; height:18px; }
+.estado-temporada { padding:12px 16px; }
+.tabla-scroll { width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; border-radius:var(--radio); }
+.tabla-scroll table { min-width:760px; }
+.tabla-scroll input[type="number"] { width:74px; min-width:74px; }
+button, input, select { min-height:36px; }
+
+@media (max-width: 800px) {
+  .topbar { position:static; gap:10px; padding:12px; }
+  .topbar h1 { width:100%; }
+  .tabs { width:100%; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .tab-btn { min-height:42px; padding:9px 8px; }
+  .topbar-acciones { width:100%; }
+  .topbar-acciones button, .btn-importar { flex:1; justify-content:center; min-height:42px; }
+  main { padding:12px; }
+  .controles { align-items:stretch; }
+  .controles > * { flex:1 1 180px; }
+  .controles label { display:flex; flex-direction:column; gap:4px; font-size:12px; color:var(--color-texto-tenue); }
+  .controles input, .controles select, .controles button { width:100%; }
+  .panel { padding:12px; }
+  .panel-header { align-items:flex-start; flex-direction:column; }
+  .panel-header span { width:100%; }
+  .panel-header button { min-height:40px; }
+  .toast { left:12px; right:12px; bottom:12px; text-align:center; }
+}

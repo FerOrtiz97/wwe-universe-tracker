@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WWE Universe Tracker</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <header class="topbar">
+    <h1>🎮 WWE Universe Tracker</h1>
+    <nav class="tabs">
+      <button class="tab-btn is-active" data-vista="dashboard">Dashboard</button>
+      <button class="tab-btn" data-vista="roster">Roster</button>
+      <button class="tab-btn" data-vista="temporadas">Temporadas</button>
+      <button class="tab-btn" data-vista="historial">Historial</button>
+      <button class="tab-btn" data-vista="titulos">Títulos</button>
+      <button class="tab-btn" data-vista="comparacion">2K25 vs 2K26</button>
+      <button class="tab-btn" data-vista="exposicion">Exposición</button>
+      <button class="tab-btn" data-vista="editor-overall">🛠️ Overall</button>
+    </nav>
+    <div class="topbar-acciones">
+      <button id="btn-exportar" title="Descargar una copia de seguridad">⬇️ Exportar</button>
+      <label class="btn-importar" title="Restaurar desde una copia de seguridad">
+        ⬆️ Importar
+        <input type="file" id="input-importar" accept="application/json" hidden />
+      </label>
+    </div>
+  </header>
+
+  <main id="contenido">
+    <section id="vista-dashboard" class="vista is-active"></section>
+    <section id="vista-roster" class="vista"></section>
+    <section id="vista-temporadas" class="vista"></section>
+    <section id="vista-historial" class="vista"></section>
+    <section id="vista-titulos" class="vista"></section>
+    <section id="vista-comparacion" class="vista"></section>
+    <section id="vista-exposicion" class="vista"></section>
+    <section id="vista-editor-overall" class="vista"></section>
+  </main>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <!--
+    Cargamos los scripts en orden simple con <script> normales (sin
+    type="module"). Esto permite abrir index.html haciendo doble clic,
+    sin necesitar un servidor local: los módulos ES6 (import/export)
+    los bloquea el navegador si abrís el archivo directamente con
+    file://, y no queremos esa fricción para un proyecto que se abre
+    así de simple.
+
+    El orden importa: cada archivo usa funciones/datos definidos en el
+    archivo anterior, así que data -> logic -> ui -> main.
+  -->
+  <script src="js/data/seedData.js"></script>
+  <script src="js/data/storage.js"></script>
+
+  <script src="js/logic/roster.js"></script>
+  <script src="js/logic/temporadas.js"></script>
+  <script src="js/logic/titulos.js"></script>
+
+  <script src="js/ui/dashboard-ui.js"></script>
+  <script src="js/ui/roster-ui.js"></script>
+  <script src="js/ui/temporadas-ui.js"></script>
+  <script src="js/ui/historial-ui.js"></script>
+  <script src="js/ui/titulos-ui.js"></script>
+  <script src="js/ui/comparacion-ui.js"></script>
+  <script src="js/logic/exposicion.js"></script>
+  <script src="js/ui/exposicion-ui.js"></script>
+  <script src="js/ui/editor-overall-ui.js"></script>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
