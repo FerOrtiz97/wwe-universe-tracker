@@ -78,7 +78,28 @@ function filaLuchador(w){
 function mostrarFormularioNuevo(estado,contenedor,guardarYRefrescar){
  const z=contenedor.querySelector("#roster-form"); z.innerHTML=formularioRoster(null); conectarFormularioRoster(z,estado,guardarYRefrescar,null);
 }
-function mostrarFormularioEdicion(estado,contenedor,guardarYRefrescar,id){const w=estado.roster.find(x=>x.id===id);if(!w)return;const z=contenedor.querySelector("#roster-form");z.innerHTML=formularioRoster(w);conectarFormularioRoster(z,estado,guardarYRefrescar,id);z.scrollIntoView({behavior:"smooth",block:"nearest"});}
+function mostrarFormularioEdicion(estado,contenedor,guardarYRefrescar,id){
+ const w=estado.roster.find(x=>x.id===id); if(!w)return;
+ const boton=contenedor.querySelector(`button[data-editar="${CSS.escape(id)}"]`); const fila=boton?.closest("tr"); if(!fila)return;
+ contenedor.querySelector(".roster-form-fila")?.remove();
+ const filaForm=document.createElement("tr"); filaForm.className="roster-form-fila";
+ const celda=document.createElement("td"); celda.colSpan=8; celda.innerHTML=formularioRoster(w);
+ filaForm.appendChild(celda); fila.after(filaForm);
+ conectarFormularioRoster(celda,estado,guardarYRefrescar,id);
+}
 function formularioRoster(w){const shows=normalizarShows(w?.shows??w?.show);return `<div class="panel"><h3>${w?`Editar a ${esc(w.nombre)}`:"Nuevo luchador"}</h3><div class="form-grid"><label>Nombre<input id="rf-nombre" value="${esc(w?.nombre??"")}" /></label><label>Género<select id="rf-genero"><option ${w?.genero!=="Mujer"?'selected':''}>Hombre</option><option ${w?.genero==="Mujer"?'selected':''}>Mujer</option></select></label><label>Overall Base<input type="number" id="rf-ob" min="1" max="99" value="${w?.overallBase??""}" /></label><label>Overall Actual<input type="number" id="rf-oa" min="1" max="99" value="${w?.overallActual??""}" /></label><label>Edad Base<input type="number" id="rf-eb" min="1" max="100" value="${w?.edadBase??""}" /></label><label>Edad Actual<input type="number" id="rf-ea" min="1" max="100" value="${w?.edadActual??""}" /></label></div><div class="check-group"><strong>Shows / estado</strong>${["RAW","SmackDown","NXT","Retirado"].map(s=>`<label class="check"><input type="checkbox" value="${s}" ${shows.includes(s)?"checked":""}> ${s}</label>`).join("")}</div><button class="accion" id="rf-guardar">Guardar</button> <button class="accion secundaria" id="rf-cancelar">Cancelar</button></div>`;}
-function conectarFormularioRoster(z,estado,guardarYRefrescar,id){z.querySelector("#rf-cancelar").onclick=()=>z.innerHTML="";z.querySelector("#rf-guardar").onclick=()=>{try{const datos={nombre:z.querySelector("#rf-nombre").value.trim(),genero:z.querySelector("#rf-genero").value,overallBase:Number(z.querySelector("#rf-ob").value)||null,overallActual:Number(z.querySelector("#rf-oa").value)||null,edadBase:Number(z.querySelector("#rf-eb").value)||null,edadActual:Number(z.querySelector("#rf-ea").value)||null,shows:[...z.querySelectorAll(".check-group input:checked")].map(x=>x.value)};if(!datos.shows.length)throw new Error("Elegí al menos un show/estado.");if(id)editarLuchador(estado,id,datos);else agregarLuchador(estado,datos);guardarYRefrescar();}catch(e){alert(e.message);}};}
+function conectarFormularioRoster(z,estado,guardarYRefrescar,id){
+  z.querySelector("#rf-cancelar").onclick=()=>z.innerHTML="";
+  z.querySelector("#rf-guardar").onclick=()=>{
+    try{
+      const posicionScroll = window.scrollY;
+      const datos={nombre:z.querySelector("#rf-nombre").value.trim(),genero:z.querySelector("#rf-genero").value,overallBase:Number(z.querySelector("#rf-ob").value)||null,overallActual:Number(z.querySelector("#rf-oa").value)||null,edadBase:Number(z.querySelector("#rf-eb").value)||null,edadActual:Number(z.querySelector("#rf-ea").value)||null,shows:[...z.querySelectorAll(".check-group input:checked")].map(x=>x.value)};
+      if(!datos.shows.length)throw new Error("Elegí al menos un show/estado.");
+      if(id)editarLuchador(estado,id,datos);else agregarLuchador(estado,datos);
+      guardarYRefrescar();
+      requestAnimationFrame(()=>window.scrollTo({top:posicionScroll,behavior:"auto"}));
+    }catch(e){alert(e.message);}
+  };
+}
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+

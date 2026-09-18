@@ -315,3 +315,41 @@ button, input, select { min-height:36px; }
   .panel-header button { min-height:40px; }
   .toast { left:12px; right:12px; bottom:12px; text-align:center; }
 }
+
+
+/* ---------- Navegación global: volver arriba ---------- */
+.volver-arriba-global {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  border: 1px solid var(--color-borde);
+  border-radius: 50%;
+  background: var(--color-panel-claro);
+  color: var(--color-texto);
+  font-size: 22px;
+  font-weight: bold;
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px);
+  transition: opacity .18s ease, transform .18s ease, visibility .18s ease;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0,0,0,.35);
+}
+.volver-arriba-global.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+.volver-arriba-global:hover {
+  border-color: var(--color-texto-tenue);
+}
+@media (max-width: 800px) {
+  .volver-arriba-global {
+    right: 14px;
+    bottom: 14px;
+  }
+}

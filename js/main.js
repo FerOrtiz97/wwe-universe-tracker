@@ -67,6 +67,19 @@ function guardarYRefrescar() {
   mostrarToast("Guardado ✓");
 }
 
+// --- Navegación global: volver arriba ---
+const btnVolverArriba = document.querySelector("#btn-volver-arriba");
+
+function actualizarBotonVolverArriba() {
+  btnVolverArriba.classList.toggle("is-visible", window.scrollY > 350);
+}
+
+btnVolverArriba.addEventListener("click", () => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+window.addEventListener("scroll", actualizarBotonVolverArriba, { passive: true });
+actualizarBotonVolverArriba();
+
 let temporizadorToast = null;
 function mostrarToast(mensaje) {
   const toast = document.querySelector("#toast");
