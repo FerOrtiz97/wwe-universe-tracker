@@ -51,6 +51,8 @@ function normalizarEstado(estado) {
   estado.campeonesActuales.forEach((c) => { if (c.diasReinado === undefined) c.diasReinado = null; });
   estado.comparacion2k26 = Array.isArray(estado.comparacion2k26) ? estado.comparacion2k26 : [];
   estado.exposicion = Array.isArray(estado.exposicion) ? estado.exposicion : [];
+  if (typeof normalizarCalendario === "function") normalizarCalendario(estado);
+  if (typeof normalizarEquipos === "function") normalizarEquipos(estado);
   estado.config = { anioUniverso: 0, temporadaActualId: estado.temporadas.at(-1)?.id || null, ...(estado.config || {}) };
   estado.temporadas.forEach(t => t.registros.forEach(r => { if (r.overallTemporalJuego === undefined) r.overallTemporalJuego = null; }));
   return estado;

@@ -60,7 +60,10 @@ function eliminarLuchador(estado, id) {
   const indice = estado.roster.findIndex((w) => w.id === id);
   if (indice === -1) throw new Error("No existe el luchador.");
   // Solo se elimina del roster. Los registros históricos mantienen el id.
-  return estado.roster.splice(indice, 1)[0];
+  const eliminado = estado.roster.splice(indice, 1)[0];
+  // Teams & Stables no puede quedar apuntando a un luchador que ya no existe.
+  if (typeof quitarLuchadorDeEquipos === "function") quitarLuchadorDeEquipos(estado, id);
+  return eliminado;
 }
 
 function luchadorPerteneceAShow(w, show) {

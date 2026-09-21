@@ -30,3 +30,25 @@ Si más adelante querés compartir los mismos datos entre PC y teléfono en tiem
 ## Futuro (fuera de v1.0)
 
 Generador de carteleras de 9 combates, actualización automática combate por combate, fotos, imágenes de títulos y mejoras visuales.
+
+## Módulo Calendario
+
+El módulo Calendario genera dos carteleras de 9 combates (Miércoles y Jueves) usando únicamente luchadores seleccionados en Exposición. Las prioridades y estadísticas se calculan a partir de Exposición/Temporadas; los resultados registrados actualizan los acumulados de la temporada mediante las funciones existentes.
+
+## Módulo Teams & Stables
+
+Administra **Tag Teams** (2 luchadores) y **Stables/Grupos** (1 o más luchadores). Es la fuente de datos que el Calendario usará más adelante para proponer combates por equipos; el Calendario no guarda ni hardcodea equipos propios.
+
+- Los datos viven en `estado.equipos` (`{ stables, tagTeams }`), dentro del mismo estado central que se guarda en `localStorage` y se exporta/importa con los backups. Lógica en `js/logic/equipos.js`, pantalla en `js/ui/equipos-ui.js`.
+- Cada Stable y Tag Team tiene un `id` interno estable; el nombre se puede editar libremente.
+- Un luchador pertenece a **un solo Stable**, pero puede estar además en uno o varios Tag Teams. Un Tag Team puede existir sin Stable y un Stable sin Tag Teams.
+- Desde un Stable se puede **crear un Tag Team derivado**: el selector solo ofrece los miembros actuales del Stable. El derivado es una entidad independiente (guarda `stableOrigenId` para mostrar la relación).
+- Eliminar un Stable elimina también sus Tag Teams derivados; los luchadores nunca se borran del Roster, y el Tag Team se puede volver a crear como independiente.
+- Si un Stable queda sin miembros, se elimina automáticamente (con sus derivados). Al eliminar un luchador del Roster, sale de sus Stables y se eliminan los Tag Teams que quedarían con un solo luchador.
+- Consultas para el Calendario: `listarTagTeams`, `listarStables`, `tagTeamsDeLuchador`, `stableDeLuchador`, `tagTeamsDerivados`, `resolverEquipo`.
+
+## Buscador de luchadores (componente reutilizable)
+
+`js/ui/buscador-luchador-ui.js` reemplaza los `<select>` con todo el roster (~165 luchadores) por un campo de búsqueda: se escribe parte del nombre (sin importar mayúsculas ni tildes), aparecen las coincidencias y se elige una (clic, o ↑ ↓ + Enter). El id elegido queda en un `<input type="hidden">`, así que el código que antes leía `select.value` sigue igual. Instrucciones de uso en el encabezado del archivo.
+
+Se usa en: Títulos → Agregar luchador (con filtro por género), Exposición → Luchador, y Teams & Stables → Primer miembro, Agregar miembro y Luchador 1/2 de Tag Team (nuevo y edición de un Tag Team independiente). Se mantienen como `<select>` los datos con pocas opciones (Historial, Campeonato, Temporada) y los Tag Teams derivados de un Stable, que solo ofrecen sus miembros.

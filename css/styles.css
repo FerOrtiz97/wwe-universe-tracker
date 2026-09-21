@@ -353,3 +353,71 @@ button, input, select { min-height:36px; }
     bottom: 14px;
   }
 }
+
+/* ---------- Calendario ---------- */
+.cal-resumen { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:14px; }
+.cal-resumen > div { background:var(--color-panel-claro); border:1px solid var(--color-borde); border-radius:8px; padding:10px; display:flex; flex-direction:column; gap:4px; }
+.cal-resumen strong { font-size:22px; }
+.cal-resumen span { color:var(--color-texto-tenue); font-size:12px; }
+.cal-ayuda { margin-left:10px; }
+.cal-dia { padding-bottom:8px; }
+.cal-combate { border:1px solid var(--color-borde); border-radius:10px; padding:12px; margin-bottom:10px; background:var(--color-panel-claro); }
+.cal-combate.cal-registrado { opacity:.82; }
+.cal-combate-cabecera { display:flex; justify-content:space-between; gap:10px; margin-bottom:10px; }
+.cal-combate-cabecera span { color:var(--color-texto-tenue); font-size:12px; }
+.cal-combate-controles { margin-bottom:10px; }
+.cal-combate-controles label, .cal-ganador label { display:flex; flex-direction:column; gap:4px; color:var(--color-texto-tenue); font-size:12px; max-width:280px; }
+.cal-participantes { font-size:15px; padding:12px 0; text-align:center; }
+.cal-participantes b { color:var(--color-texto-tenue); margin:0 5px; }
+.cal-equipos { padding:10px 0; line-height:1.8; }
+.cal-participante.cal-repetido { display:inline-block; vertical-align:top; }
+.cal-aviso { display:block; color:var(--color-alerta); font-size:12px; line-height:1.3; margin-top:2px; }
+.cal-ganador { display:flex; align-items:flex-end; gap:10px; flex-wrap:wrap; }
+.cal-ganador select { min-width:220px; }
+@media (max-width:800px) {
+  .cal-ayuda { display:block; margin:10px 0 0; }
+  .cal-combate-cabecera { align-items:flex-start; flex-direction:column; }
+  .cal-ganador { align-items:stretch; flex-direction:column; }
+  .cal-ganador label, .cal-ganador select { max-width:none; width:100%; }
+}
+
+/* ---------- Teams & Stables ---------- */
+.eq-resumen { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:14px; }
+.eq-resumen > div { background:var(--color-panel-claro); border:1px solid var(--color-borde); border-radius:8px; padding:10px; display:flex; flex-direction:column; gap:4px; }
+.eq-resumen strong { font-size:22px; }
+.eq-resumen span { color:var(--color-texto-tenue); font-size:12px; }
+.eq-card { border:1px solid var(--color-borde); border-radius:10px; padding:12px; margin-bottom:10px; background:var(--color-panel-claro); }
+.eq-cabecera { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+.eq-cabecera h4 { margin:0; font-size:15px; }
+.eq-acciones { display:flex; gap:8px; flex-wrap:wrap; }
+.eq-miembros { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+.eq-miembro { display:inline-flex; align-items:center; gap:6px; background:var(--color-panel); border:1px solid var(--color-borde); border-radius:999px; padding:4px 12px; font-size:13px; }
+.eq-quitar { background:none; border:none; color:var(--color-texto-tenue); cursor:pointer; padding:0 2px; min-height:0; font-size:13px; }
+.eq-quitar:hover { color:var(--color-peligro); }
+.eq-agregar { align-items:center; margin-bottom:12px; }
+.eq-seccion { border-top:1px solid var(--color-borde); padding-top:10px; }
+.eq-derivados { list-style:none; margin:8px 0 10px; padding:0; display:flex; flex-direction:column; gap:4px; font-size:13px; }
+.eq-form { background:var(--color-panel); border:1px solid var(--color-borde); border-radius:8px; padding:12px; margin-bottom:12px; }
+.eq-form-botones { display:flex; gap:8px; flex-wrap:wrap; }
+.eq-nombre-edicion { display:flex; flex-direction:column; gap:5px; color:var(--color-texto-tenue); font-size:12px; margin-bottom:10px; }
+.chip.eq-chip-derivado { background:var(--color-smackdown-claro); color:#8fc2ff; margin-left:6px; }
+.chip.eq-chip-independiente { background:var(--color-retirado-claro); color:#bbb; margin-left:6px; }
+
+/* ---------- Buscador de luchadores (componente reutilizable) ---------- */
+.buscador-luchador { display:flex; flex-direction:column; gap:5px; min-width:0; }
+.buscador-luchador > label { font-size:12px; color:var(--color-texto-tenue); }
+.bl-etiqueta-oculta { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+.bl-campo { position:relative; }
+.bl-entrada { width:100%; box-sizing:border-box; padding-right:30px; }
+.bl-check { display:none; position:absolute; right:10px; top:50%; transform:translateY(-50%); color:var(--color-acento); font-weight:bold; pointer-events:none; }
+.buscador-luchador.is-seleccionado .bl-entrada { border-color:var(--color-acento); box-shadow:0 0 0 1px var(--color-acento); font-weight:bold; }
+.buscador-luchador.is-seleccionado .bl-check { display:block; }
+.bl-resultados { position:absolute; left:0; right:0; top:calc(100% + 4px); z-index:30; max-height:260px; overflow-y:auto; background:var(--color-panel); border:1px solid var(--color-borde); border-radius:8px; box-shadow:0 6px 18px rgba(0,0,0,.45); }
+.bl-resultados[hidden] { display:none; }
+.bl-opcion { display:block; width:100%; text-align:left; background:none; border:none; color:var(--color-texto); padding:9px 12px; font-size:13px; cursor:pointer; }
+.bl-opcion:hover, .bl-opcion.is-activa { background:var(--color-panel-claro); color:var(--color-acento); }
+.bl-mensaje { margin:0; padding:9px 12px; }
+.form-linea .buscador-luchador { flex:1 1 240px; }
+@media (max-width: 800px) {
+  .bl-opcion { min-height:40px; }
+}

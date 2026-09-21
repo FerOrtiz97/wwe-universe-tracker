@@ -85,8 +85,11 @@ function mostrarFormAgregarLuchadorTitulo(estado,contenedor,guardarYRefrescar){
   const t=estado.titulosHistorial.find(x=>x.campeonato===campeonatoSeleccionado); if(!t)return;
   const cols=obtenerColumnasTemporadaTitulos(estado,t);
   const usados=new Set((t.historial||[]).map(f=>claveNombreTitulo(f.nombre)));
-  const opciones=estado.roster.filter(w=>!usados.has(claveNombreTitulo(w.nombre))).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
-  z.innerHTML=`<div class="panel"><h3>Agregar luchador al historial de ${esc(t.campeonato)}</h3><label>Luchador<select id="th-luchador"><option value="">Elegir...</option>${opciones.map(w=>`<option value="${esc(w.id)}">${esc(w.nombre)}</option>`).join('')}</select></label><br><button class="accion" id="th-ok">Agregar</button> <button class="accion secundaria" id="th-cancel">Cancelar</button></div>`;
+  // Luchadores que todavía no están en este campeonato, acotados por el filtro de género.
+  const opciones=()=>{const g=z.querySelector('#th-genero')?.value||'todos';return estado.roster.filter(w=>!usados.has(claveNombreTitulo(w.nombre))&&(g==='todos'||w.genero===g));};
+  z.innerHTML=`<div class="panel"><h3>Agregar luchador al historial de ${esc(t.campeonato)}</h3><div class="form-grid"><label>Género<select id="th-genero"><option value="todos">Todos</option><option value="Hombre">Hombres</option><option value="Mujer">Mujeres</option></select></label>${htmlBuscadorLuchador({id:'th-luchador',etiqueta:'Luchador'})}</div><button class="accion" id="th-ok">Agregar</button> <button class="accion secundaria" id="th-cancel">Cancelar</button></div>`;
+  const buscador=activarBuscadorLuchador(z,{id:'th-luchador',luchadores:opciones});
+  z.querySelector('#th-genero').onchange=()=>buscador.refrescar();
   z.querySelector('#th-cancel').onclick=()=>renderListaTitulos(estado,contenedor,guardarYRefrescar);
   z.querySelector('#th-ok').onclick=()=>{const id=z.querySelector('#th-luchador').value,w=estado.roster.find(x=>x.id===id);if(!w)return alert('Elegí un luchador.');t.historial.push({nombre:w.nombre,titulosJuego:null,...Object.fromEntries(cols.map(c=>[c,null]))});guardarYRefrescar();};
 }

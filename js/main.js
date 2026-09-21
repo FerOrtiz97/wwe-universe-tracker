@@ -29,6 +29,8 @@ const RENDERIZADORES = {
   titulos: (contenedor) => renderTitulos(estado, contenedor, guardarYRefrescar),
   comparacion: (contenedor) => renderComparacion(estado, contenedor),
   exposicion: (contenedor) => renderExposicion(estado, contenedor, guardarYRefrescar),
+  calendario: (contenedor) => renderCalendario(estado, contenedor, guardarYRefrescar),
+  equipos: (contenedor) => renderEquipos(estado, contenedor, guardarYRefrescar),
   "editor-overall": (contenedor) => renderEditorOverall(estado, contenedor, guardarYRefrescar),
 };
 

@@ -33,11 +33,13 @@ function renderExposicion(estado, contenedor, guardarYRefrescar) {
   const filtroShow=filtrosExposicion.show;
   const busqueda=filtrosExposicion.busqueda;
   contenedor.innerHTML = `<h2>👀 Exposición</h2><p class="texto-tenue">Lista manual. Las estadísticas siguen teniendo una única fuente: Temporadas. Desde acá también podés editar V/D de cada temporada.</p>
-    <div class="panel"><div class="panel-header"><h3>Agregar luchador</h3></div><div class="form-grid"><label>Luchador<select id="exp-luchador"><option value="">Elegir...</option>${estado.roster.slice().sort((a,b)=>a.nombre.localeCompare(b.nombre)).map(w=>`<option value="${w.id}">${esc(w.nombre)}</option>`).join('')}</select></label><label>Temporada<select id="exp-temp"><option value="">Elegir...</option>${estado.temporadas.map(t=>`<option value="${t.id}">${esc(t.id)}</option>`).join('')}</select></label></div><button class="accion" id="exp-agregar">➕ Agregar</button></div>
+    <div class="panel"><div class="panel-header"><h3>Agregar luchador</h3></div><div class="form-grid">${htmlBuscadorLuchador({id:'exp-luchador',etiqueta:'Luchador'})}<label>Temporada<select id="exp-temp"><option value="">Elegir...</option>${estado.temporadas.map(t=>`<option value="${t.id}">${esc(t.id)}</option>`).join('')}</select></label></div><button class="accion" id="exp-agregar">➕ Agregar</button></div>
     <div class="panel"><div class="panel-header"><h3>Seguimiento por temporada</h3><button class="accion" id="exp-guardar-todo">💾 Guardar todo</button></div>
       <div class="controles exp-filtros"><input type="text" id="exp-busqueda" placeholder="Buscar luchador..." value="${esc(busqueda)}"><label>Género<select id="exp-filtro-genero"><option value="todos" ${filtroGenero==='todos'?'selected':''}>Todos</option><option value="Hombre" ${filtroGenero==='Hombre'?'selected':''}>Hombres</option><option value="Mujer" ${filtroGenero==='Mujer'?'selected':''}>Mujeres</option></select></label><label>Show<select id="exp-filtro-show"><option value="todos" ${filtroShow==='todos'?'selected':''}>Todos</option><option value="RAW" ${filtroShow==='RAW'?'selected':''}>RAW</option><option value="SmackDown" ${filtroShow==='SmackDown'?'selected':''}>SmackDown</option><option value="NXT" ${filtroShow==='NXT'?'selected':''}>NXT</option></select></label></div>
       <div class="tabla-scroll"><table><thead><tr>${th('nombre','Luchador')}${th('show','Show actual')}${th('temporada','Temporada')}${th('victorias','V')}${th('derrotas','D')}${th('totalCombates','Total combates')}${th('balance','Balance')}${th('participacion','Participación')}${th('tendencia','Racha / tendencia')}${th('puntos','Puntos')}<th>Acciones</th></tr></thead><tbody>${ordenados.map(d=>`<tr data-exp-nombre="${esc(d.nombre)}"><td>${esc(d.nombre)}</td><td>${chipsShows(d.show)}</td><td>${esc(d.temporada)}</td><td><input type="number" min="0" data-exp-v="${d.indice}" value="${d.calc?.deltas.victorias??0}"></td><td><input type="number" min="0" data-exp-d="${d.indice}" value="${d.calc?.deltas.derrotas??0}"></td><td>${d.calc?d.calc.deltas.victorias+d.calc.deltas.derrotas:'—'}</td><td>${d.balance??'—'}</td><td>${clasificarParticipacion(d.calc?(d.calc.deltas.victorias+d.calc.deltas.derrotas):0)}</td><td>${clasificarTendencia({entradas:[d],victorias:d.calc?.deltas.victorias||0,derrotas:d.calc?.deltas.derrotas||0})}</td><td>${d.calc?.puntosTemporada??'—'}</td><td><button class="accion secundaria" data-exp-del="${d.indice}">🗑️</button></td></tr>`).join('')}</tbody></table></div></div>
     <div class="panel"><h3>Acumulado histórico de Exposición</h3><div class="tabla-scroll"><table><thead><tr>${tha('nombre','Luchador')}${tha('show','Show actual')}${tha('temporadas','Temporadas seguidas')}${tha('victorias','Victorias')}${tha('derrotas','Derrotas')}${tha('totalCombates','Total combates')}${tha('balance','Balance V-D')}${tha('participacion','Participación')}${tha('tendencia','Racha / tendencia')}</tr></thead><tbody>${acumulados.map(r=>`<tr data-exp-nombre="${esc(r.nombre)}"><td>${esc(r.nombre)}</td><td>${chipsShows(r.show)}</td><td>${r.entradas.map(x=>esc(x.temporada)).join(', ')}</td><td>${r.victorias}</td><td>${r.derrotas}</td><td>${r.totalCombates}</td><td>${r.balance}</td><td>${r.participacion}</td><td>${r.tendencia}</td></tr>`).join('')}</tbody></table></div><p class="texto-tenue">La racha exacta combate por combate todavía no existe en los datos. El indicador muestra la tendencia disponible.</p></div>`;
+
+  activarBuscadorLuchador(contenedor,{id:'exp-luchador',luchadores:estado.roster});
 
   const guardarCambiosExposicion = () => {
     try {
@@ -68,7 +70,18 @@ function renderExposicion(estado, contenedor, guardarYRefrescar) {
       fila.hidden = !!termino && !nombre.includes(termino);
     });
   };
-  contenedor.querySelector('#exp-busqueda').oninput=e=>{filtrosExposicion.busqueda=e.target.value;aplicarBusquedaExposicion();};
+  contenedor.querySelector('#exp-busqueda').oninput=e=>{
+    const valor=e.target.value;
+    const terminoAnterior=filtrosExposicion.busqueda;
+    filtrosExposicion.busqueda=valor;
+    if(!valor.trim() && terminoAnterior.trim()){
+      renderExposicion(estado,contenedor,guardarYRefrescar);
+      const buscador=contenedor.querySelector('#exp-busqueda');
+      if(buscador){buscador.focus();buscador.setSelectionRange(buscador.value.length,buscador.value.length);}
+      return;
+    }
+    aplicarBusquedaExposicion();
+  };
   aplicarBusquedaExposicion();
   contenedor.querySelector('#exp-filtro-genero').onchange=e=>{const valor=e.target.value;if(exposicionCambiosPendientes) guardarCambiosExposicion();if(!document.querySelector('#vista-exposicion.is-active'))return;filtrosExposicion.genero=valor;renderExposicion(estado,contenedor,guardarYRefrescar);};
   contenedor.querySelector('#exp-filtro-show').onchange=e=>{const valor=e.target.value;if(exposicionCambiosPendientes) guardarCambiosExposicion();if(!document.querySelector('#vista-exposicion.is-active'))return;filtrosExposicion.show=valor;renderExposicion(estado,contenedor,guardarYRefrescar);};
