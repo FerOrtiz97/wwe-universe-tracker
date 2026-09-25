@@ -238,10 +238,6 @@ Las probabilidades serán ponderadas; no significa que cada cartelera tenga que 
 
 Módulo para administrar la estructura actual de equipos y grupos del Universo.
 
-Es la **fuente de datos de equipos** que utilizará posteriormente el Calendario.
-
-Los equipos no deben estar hardcodeados dentro de `calendario.js`.
-
 Los datos viven en:
 
 ```text
@@ -310,6 +306,40 @@ Si se elimina un Stable:
 
 Los Tag Teams independientes no se eliminan al modificar o eliminar otros Stables.
 
+### Integración con el Calendario
+
+El Calendario utiliza los Tags y Stables existentes como contexto para generar combates por equipos.
+
+Cuando corresponde, el generador puede utilizar estructuras reales de Tags y Stables para completar los equipos.
+
+La prioridad de Exposición determina el protagonista o ancla del combate, mientras que el Tag o Stable determina los acompañantes cuando existe una estructura válida.
+
+Los equipos temporales utilizados por el generador no se guardan como nuevos equipos en `estado.equipos`.
+
+### Buscador
+
+El módulo dispone de un único buscador para **Stables y Tags**.
+
+Permite buscar en tiempo real por:
+
+* Nombre del Stable.
+* Nombre del Tag Team.
+* Nombre de cualquiera de sus integrantes.
+
+Ejemplos:
+
+```text
+Tatum
+→ Allies of Convenience
+```
+
+```text
+Gargano
+→ #DIY
+```
+
+Si la búsqueda no encuentra resultados, se muestra un mensaje indicando que no se encontraron Stables ni Tags.
+
 ### Archivos principales
 
 ```text
@@ -317,7 +347,7 @@ js/logic/equipos.js
 js/ui/equipos-ui.js
 ```
 
-Consultas preparadas para el Calendario:
+Consultas utilizadas por el resto de la aplicación:
 
 ```text
 listarTagTeams
@@ -401,6 +431,7 @@ En Títulos → Agregar luchador también existe filtro por género:
 * Evitar refactors innecesarios.
 * Los nombres visibles pueden cambiar; nunca utilizar el nombre como identificador interno.
 * Utilizar IDs internos estables para relacionar entidades.
+* Mantener separadas las responsabilidades entre `data/`, `logic/` y `ui/`.
 
 ---
 
@@ -412,8 +443,9 @@ Ejemplo:
 
 ```text
 master
-└── feature/exposicion
-└── feature/calendario
+├── feature/exposicion
+├── feature/calendario
+└── feature/calendar-stables-tags
 ```
 
 Flujo habitual:
@@ -451,12 +483,10 @@ Si se borra el `localStorage`, se pierde el estado actual de ese navegador y la 
 
 Funcionalidades previstas:
 
-* Integración completa de Teams & Stables con el generador del Calendario.
-* Probabilidades configurables de los 6 tipos de combate.
-* Generación inteligente de Tag Teams y combates multi-equipo.
 * Fotos de luchadores.
 * Imágenes de títulos.
-* Mejoras visuales.
+* Mejoras visuales y de interfaz.
 * Posible sincronización entre PC y teléfono mediante backend en una versión futura.
+* Nuevas herramientas y mejoras para la gestión del Universo.
 
 La aplicación actualmente está pensada para uso personal y no requiere publicación en Google Play.
