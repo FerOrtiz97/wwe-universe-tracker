@@ -8,8 +8,9 @@
 // Formulario abierto en este momento (uno solo a la vez):
 //   null
 //   { tipo: "nuevo-stable" | "nuevo-tag" }
-//   { tipo: "renombrar-stable" | "editar-tag" | "derivar", id }
+//   { tipo: "editar-stable" | "editar-tag" | "derivar", id }
 let equiposFormulario = null;
+let filtrosEquiposStables = { busqueda: "" };
 
 function compararNombresEquipos(a, b) {
   return a.nombre.localeCompare(b.nombre, "es", { sensitivity: "base" });
@@ -53,36 +54,52 @@ function htmlBotonesFormularioEquipos(accion, id = "", textoGuardar = "Guardar")
 
 function htmlStableEquipos(estado, stable) {
   const derivados = tagTeamsDerivados(estado, stable.id).sort(compararNombresEquipos);
-  const renombrando = equiposFormulario?.tipo === "renombrar-stable" && equiposFormulario.id === stable.id;
+  const editando = equiposFormulario?.tipo === "editar-stable" && equiposFormulario.id === stable.id;
   const derivando = equiposFormulario?.tipo === "derivar" && equiposFormulario.id === stable.id;
   const sinAgregar = luchadoresSinStable(estado);
   const miembros = stable.miembros.map((id) => obtenerLuchadorParaHistorial(estado, id));
 
-  const titulo = renombrando
-    ? `<div class="eq-form"><label class="eq-nombre-edicion">Nombre del Stable<input type="text" id="eq-f-nombre" value="${esc(stable.nombre)}" /></label>${htmlBotonesFormularioEquipos("guardar-nombre-stable", stable.id)}</div>`
+  // Estado normal: solo información (nombre + integrantes). Los campos de
+  // edición (nombre editable, agregar/quitar miembro, derivar Tag Team) solo
+  // aparecen cuando esta tarjeta puntual entró en modo edición.
+  const titulo = editando
+    ? `<label class="eq-nombre-edicion">Nombre del Stable<input type="text" id="eq-f-nombre" value="${esc(stable.nombre)}" /></label>`
     : `<h4>🏴 ${esc(stable.nombre)} <span class="texto-tenue">· ${stable.miembros.length} ${stable.miembros.length === 1 ? "miembro" : "miembros"}</span></h4>`;
-  const acciones = renombrando ? "" : `<div class="eq-acciones">
-      <button type="button" class="accion secundaria" data-eq-accion="abrir" data-form="renombrar-stable" data-id="${esc(stable.id)}">✏️ Renombrar</button>
-      <button type="button" class="accion secundaria" data-eq-accion="eliminar-stable" data-id="${esc(stable.id)}">🗑️ Eliminar</button>
-    </div>`;
+
+  const acciones = editando
+    ? `<div class="eq-acciones">
+        <button type="button" class="accion" data-eq-accion="guardar-nombre-stable" data-id="${esc(stable.id)}">💾 Guardar</button>
+        <button type="button" class="accion secundaria" data-eq-accion="cancelar">Cancelar</button>
+      </div>`
+    : `<div class="eq-acciones">
+        <button type="button" class="accion secundaria" data-eq-accion="abrir" data-form="editar-stable" data-id="${esc(stable.id)}">✏️ Editar</button>
+        <button type="button" class="accion secundaria" data-eq-accion="eliminar-stable" data-id="${esc(stable.id)}">🗑️ Eliminar</button>
+      </div>`;
 
   const listaDerivados = derivados.length
     ? `<ul class="eq-derivados">${derivados.map((t) => `<li>↳ <strong>${esc(t.nombre)}</strong> <span class="texto-tenue">${t.miembros.map((id) => esc(nombreLuchadorPorId(estado, id))).join(" + ")}</span></li>`).join("")}</ul>`
     : `<p class="texto-tenue">Este Stable no tiene Tag Teams derivados.</p>`;
 
+  const agregarMiembro = editando
+    ? `<div class="form-linea eq-agregar">
+      ${htmlBuscadorLuchador({ id: `eq-agregar-${stable.id}`, etiqueta: "Luchador a agregar", etiquetaVisible: false, deshabilitado: !sinAgregar.length })}
+      <button type="button" class="accion secundaria" data-eq-accion="agregar-miembro" data-id="${esc(stable.id)}" ${sinAgregar.length ? "" : "disabled"}>➕ Agregar miembro</button>
+    </div>`
+    : "";
+
   const formDerivado = derivando
     ? `<div class="eq-form"><p class="texto-tenue">Solo se pueden elegir miembros actuales de ${esc(stable.nombre)}.</p>
         ${htmlCamposTagTeam(estado, miembros)}${htmlBotonesFormularioEquipos("crear-derivado", stable.id, "Crear Tag Team")}</div>`
-    : `<button type="button" class="accion secundaria" data-eq-accion="abrir" data-form="derivar" data-id="${esc(stable.id)}" ${stable.miembros.length < MIEMBROS_TAG_TEAM ? 'disabled title="El Stable necesita al menos 2 miembros"' : ""}>➕ Crear Tag Team derivado</button>`;
+    : "";
+  const botonDerivar = editando
+    ? `<button type="button" class="accion secundaria" data-eq-accion="abrir" data-form="derivar" data-id="${esc(stable.id)}" ${stable.miembros.length < MIEMBROS_TAG_TEAM ? 'disabled title="El Stable necesita al menos 2 miembros"' : ""}>➕ Crear Tag Team derivado</button>`
+    : "";
 
   return `<div class="eq-card">
     <div class="eq-cabecera">${titulo}${acciones}</div>
-    <div class="eq-miembros">${stable.miembros.map((id) => htmlMiembroEquipo(estado, id, stable.id)).join("")}</div>
-    <div class="form-linea eq-agregar">
-      ${htmlBuscadorLuchador({ id: `eq-agregar-${stable.id}`, etiqueta: "Luchador a agregar", etiquetaVisible: false, deshabilitado: !sinAgregar.length })}
-      <button type="button" class="accion secundaria" data-eq-accion="agregar-miembro" data-id="${esc(stable.id)}" ${sinAgregar.length ? "" : "disabled"}>➕ Agregar miembro</button>
-    </div>
-    <div class="eq-seccion"><strong>Tag Teams derivados</strong>${listaDerivados}${formDerivado}</div>
+    <div class="eq-miembros">${stable.miembros.map((id) => htmlMiembroEquipo(estado, id, editando ? stable.id : null)).join("")}</div>
+    ${agregarMiembro}
+    <div class="eq-seccion"><strong>Tag Teams derivados</strong>${listaDerivados}${editando ? `${botonDerivar}${formDerivado}` : ""}</div>
   </div>`;
 }
 
@@ -114,6 +131,76 @@ function htmlTagTeamEquipos(estado, tag) {
     <div class="eq-miembros">${tag.miembros.map((id) => htmlMiembroEquipo(estado, id)).join("")}</div>
     ${form}
   </div>`;
+}
+
+function stablesFiltradosBusqueda(estado, stables, busqueda) {
+  const q = busqueda.trim().toLowerCase();
+  if (!q) return stables;
+  return stables.filter((s) => {
+    if (s.nombre.toLowerCase().includes(q)) return true;
+    return s.miembros.some((id) => {
+      const w = obtenerLuchadorParaHistorial(estado, id);
+      return w && w.nombre.toLowerCase().includes(q);
+    });
+  });
+}
+
+// Mismo criterio que stablesFiltradosBusqueda (nombre del equipo o de
+// cualquier integrante), aplicado a Tag Teams. Un solo buscador (el de
+// Stables/Grupos) filtra ambos listados con la misma búsqueda.
+function tagsFiltradosBusqueda(estado, tags, busqueda) {
+  const q = busqueda.trim().toLowerCase();
+  if (!q) return tags;
+  return tags.filter((t) => {
+    if (t.nombre.toLowerCase().includes(q)) return true;
+    return t.miembros.some((id) => {
+      const w = obtenerLuchadorParaHistorial(estado, id);
+      return w && w.nombre.toLowerCase().includes(q);
+    });
+  });
+}
+
+function htmlListaStables(estado, stables) {
+  if (!stables.length) return `<p class="texto-tenue">Todavía no hay Stables.</p>`;
+  const busqueda = filtrosEquiposStables.busqueda;
+  const visibles = stablesFiltradosBusqueda(estado, stables, busqueda);
+  if (visibles.length) return visibles.map((s) => htmlStableEquipos(estado, s)).join("");
+  // Sin resultados: si tampoco hay Tags para la misma búsqueda, el mensaje
+  // lo deja en claro para los dos grupos a la vez.
+  const tagsVisibles = tagsFiltradosBusqueda(estado, equiposDe(estado).tagTeams, busqueda);
+  return tagsVisibles.length
+    ? `<p class="texto-tenue">No se encontraron Stables para "${esc(busqueda)}".</p>`
+    : `<p class="texto-tenue">No se encontraron Stables ni Tags para "${esc(busqueda)}".</p>`;
+}
+
+// Simétrica a htmlListaStables, para Tag Teams. Usa la misma búsqueda
+// compartida (filtrosEquiposStables.busqueda) para que un solo campo
+// filtre ambos listados a la vez.
+function htmlListaTags(estado, tags) {
+  if (!tags.length) return `<p class="texto-tenue">Todavía no hay Tag Teams.</p>`;
+  const busqueda = filtrosEquiposStables.busqueda;
+  const visibles = tagsFiltradosBusqueda(estado, tags, busqueda);
+  if (visibles.length) return visibles.map((t) => htmlTagTeamEquipos(estado, t)).join("");
+  const stablesVisibles = stablesFiltradosBusqueda(estado, equiposDe(estado).stables, busqueda);
+  return stablesVisibles.length
+    ? `<p class="texto-tenue">No se encontraron Tags para "${esc(busqueda)}".</p>`
+    : `<p class="texto-tenue">No se encontraron Stables ni Tags para "${esc(busqueda)}".</p>`;
+}
+
+// Actualiza las listas de Stables Y Tag Teams (usadas por el mismo buscador,
+// "mientras se escribe") sin reconstruir toda la pantalla ni perder el foco
+// del input.
+function actualizarListaStables(estado, contenedor, guardarYRefrescar) {
+  const eq = equiposDe(estado);
+  const stables = eq.stables.slice().sort(compararNombresEquipos);
+  const tagTeams = eq.tagTeams.slice().sort(compararNombresEquipos);
+  const listaStables = contenedor.querySelector("#eq-stables-lista");
+  if (listaStables) {
+    listaStables.innerHTML = htmlListaStables(estado, stables);
+    eq.stables.forEach((s) => activarBuscadorLuchador(contenedor, { id: `eq-agregar-${s.id}`, luchadores: () => luchadoresSinStable(estado) }));
+  }
+  const listaTags = contenedor.querySelector("#eq-tags-lista");
+  if (listaTags) listaTags.innerHTML = htmlListaTags(estado, tagTeams);
 }
 
 function renderEquipos(estado, contenedor, guardarYRefrescar) {
@@ -149,14 +236,20 @@ function renderEquipos(estado, contenedor, guardarYRefrescar) {
       <div><strong>${enStables}</strong><span>Luchadores en Stables</span></div>
     </div>
     <div class="panel">
-      <div class="panel-header"><h3>Stables / Grupos</h3><button type="button" class="accion" data-eq-accion="abrir" data-form="nuevo-stable">➕ Nuevo Stable</button></div>
+      <div class="panel-header">
+        <h3>Stables / Grupos</h3>
+        <div class="controles">
+          <input type="text" id="eq-busqueda-stables" placeholder="Buscar Stable o Tag por nombre o integrante..." value="${esc(filtrosEquiposStables.busqueda)}" />
+          <button type="button" class="accion" data-eq-accion="abrir" data-form="nuevo-stable">➕ Nuevo Stable</button>
+        </div>
+      </div>
       ${formNuevoStable}
-      ${stables.length ? stables.map((s) => htmlStableEquipos(estado, s)).join("") : `<p class="texto-tenue">Todavía no hay Stables.</p>`}
+      <div id="eq-stables-lista">${htmlListaStables(estado, stables)}</div>
     </div>
     <div class="panel">
       <div class="panel-header"><h3>Tag Teams</h3><button type="button" class="accion" data-eq-accion="abrir" data-form="nuevo-tag">➕ Nuevo Tag Team</button></div>
       ${formNuevoTag}
-      ${tagTeams.length ? tagTeams.map((t) => htmlTagTeamEquipos(estado, t)).join("") : `<p class="texto-tenue">Todavía no hay Tag Teams.</p>`}
+      <div id="eq-tags-lista">${htmlListaTags(estado, tagTeams)}</div>
     </div>`;
 
   // Buscadores de luchadores (activarBuscadorLuchador devuelve null si ese buscador no está dibujado).
@@ -164,6 +257,11 @@ function renderEquipos(estado, contenedor, guardarYRefrescar) {
   activarBuscadorLuchador(contenedor, { id: "eq-f-a", luchadores: () => (equiposFormulario?.tipo === "nuevo-stable" ? luchadoresSinStable(estado) : estado.roster), valorInicial: tagEnEdicion?.miembros[0] ?? "" });
   activarBuscadorLuchador(contenedor, { id: "eq-f-b", luchadores: () => estado.roster, valorInicial: tagEnEdicion?.miembros[1] ?? "" });
   eq.stables.forEach((s) => activarBuscadorLuchador(contenedor, { id: `eq-agregar-${s.id}`, luchadores: () => luchadoresSinStable(estado) }));
+
+  contenedor.querySelector("#eq-busqueda-stables").addEventListener("input", (evento) => {
+    filtrosEquiposStables.busqueda = evento.target.value;
+    actualizarListaStables(estado, contenedor, guardarYRefrescar);
+  });
 
   const leer = (selector) => contenedor.querySelector(selector)?.value ?? "";
   const cerrarYGuardar = () => { equiposFormulario = null; guardarYRefrescar(); };

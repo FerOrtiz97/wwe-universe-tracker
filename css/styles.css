@@ -363,10 +363,12 @@ button, input, select { min-height:36px; }
 .cal-dia { padding-bottom:8px; }
 .cal-combate { border:1px solid var(--color-borde); border-radius:10px; padding:12px; margin-bottom:10px; background:var(--color-panel-claro); }
 .cal-combate.cal-registrado { opacity:.82; }
+.cal-combate.cal-bloqueado { border-color:#b08900; background:color-mix(in srgb, var(--color-panel-claro) 88%, #b08900 12%); }
 .cal-combate-cabecera { display:flex; justify-content:space-between; gap:10px; margin-bottom:10px; }
 .cal-combate-cabecera span { color:var(--color-texto-tenue); font-size:12px; }
-.cal-combate-controles { margin-bottom:10px; }
+.cal-combate-controles { margin-bottom:10px; display:flex; flex-wrap:wrap; gap:14px; }
 .cal-combate-controles label, .cal-ganador label { display:flex; flex-direction:column; gap:4px; color:var(--color-texto-tenue); font-size:12px; max-width:280px; }
+.cal-combate-acciones { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
 .cal-participantes { font-size:15px; padding:12px 0; text-align:center; }
 .cal-participantes b { color:var(--color-texto-tenue); margin:0 5px; }
 .cal-equipos { padding:10px 0; line-height:1.8; }
@@ -420,4 +422,19 @@ button, input, select { min-height:36px; }
 .form-linea .buscador-luchador { flex:1 1 240px; }
 @media (max-width: 800px) {
   .bl-opcion { min-height:40px; }
+}
+
+/* ---------- Calendario: probabilidades de tipos ---------- */
+.cal-prob-grid { display:grid; grid-template-columns:repeat(3,minmax(160px,1fr)); gap:10px; margin-bottom:12px; }
+.cal-prob-item { display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--color-panel); border:1px solid var(--color-borde); border-radius:8px; padding:10px 12px; }
+.cal-prob-input { display:flex; align-items:center; gap:4px; white-space:nowrap; }
+.cal-prob-input input { width:70px; box-sizing:border-box; }
+.cal-prob-footer { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+.cal-prob-total-ok { color:var(--color-acento); }
+.cal-prob-total-error { color:var(--color-peligro); }
+@media (max-width: 800px) {
+  .cal-prob-grid { grid-template-columns:1fr 1fr; }
+}
+@media (max-width: 520px) {
+  .cal-prob-grid { grid-template-columns:1fr; }
 }
