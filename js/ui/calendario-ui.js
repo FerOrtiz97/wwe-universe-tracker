@@ -201,20 +201,31 @@ function renderCalendario(estado, contenedor, guardarYRefrescar) {
   actualizarProbabilidadesUI();
 
   contenedor.querySelector("#cal-generar").onclick = () => {
-    const hayResultados = [...calendario.miercoles, ...calendario.jueves].some(c => c.resultadoRegistrado);
-    if (hayResultados && !confirm("Ya hay resultados registrados. Generar de nuevo conservará esos resultados y los combates bloqueados, y reemplazará solo el resto. ¿Continuar?")) return;
+    const combatesActuales = [...calendario.miercoles, ...calendario.jueves];
+    const hayResultados = combatesActuales.some(c => c.resultadoRegistrado);
+    // Cartelera completa: los 18 combates de Miércoles y Jueves ya tienen
+    // resultado registrado. El generador queda "restablecido": la próxima
+    // cartelera se arma completamente nueva, sin conservar nada de la
+    // anterior (los resultados ya quedaron guardados en la Temporada).
+    const carteleraCompleta = combatesActuales.length > 0 && combatesActuales.every(c => c.resultadoRegistrado);
+    if (hayResultados && !carteleraCompleta && !confirm("Ya hay resultados registrados. Generar de nuevo conservará esos resultados y los combates bloqueados, y reemplazará solo el resto. ¿Continuar?")) return;
     try {
       const nuevo = generarCalendarioCompleto(estado);
-      // Se conserva por POSICIÓN (no por índice dentro de un filtro): un
-      // combate registrado o bloqueado debe seguir siendo exactamente el
-      // mismo "Combate N", no desplazarse a otro lugar de la cartelera.
-      const conservarPorPosicion = (viejos, nuevos) => nuevos.map((c, i) => {
-        const anterior = viejos[i];
-        return anterior && (anterior.resultadoRegistrado || anterior.bloqueado) ? anterior : c;
-      });
       calendario.temporadaId = nuevo.temporadaId;
-      calendario.miercoles = conservarPorPosicion(calendario.miercoles, nuevo.miercoles);
-      calendario.jueves = conservarPorPosicion(calendario.jueves, nuevo.jueves);
+      if (carteleraCompleta) {
+        calendario.miercoles = nuevo.miercoles;
+        calendario.jueves = nuevo.jueves;
+      } else {
+        // Se conserva por POSICIÓN (no por índice dentro de un filtro): un
+        // combate registrado o bloqueado debe seguir siendo exactamente el
+        // mismo "Combate N", no desplazarse a otro lugar de la cartelera.
+        const conservarPorPosicion = (viejos, nuevos) => nuevos.map((c, i) => {
+          const anterior = viejos[i];
+          return anterior && (anterior.resultadoRegistrado || anterior.bloqueado) ? anterior : c;
+        });
+        calendario.miercoles = conservarPorPosicion(calendario.miercoles, nuevo.miercoles);
+        calendario.jueves = conservarPorPosicion(calendario.jueves, nuevo.jueves);
+      }
       calendarioCambioActivo = null;
       guardarYRefrescar();
     } catch (e) { alert(e.message); }

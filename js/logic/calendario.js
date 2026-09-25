@@ -951,17 +951,39 @@ function registrarResultadoCalendario(estado, combate) {
   if (!temporada) throw new Error("No existe la temporada del Calendario.");
   if (temporada.cerrada) throw new Error(`La temporada ${temporada.id} está cerrada.`);
 
+  // Combates por equipos (2vs2, 3vs3, 2vs2vs2): elegir como ganador a un
+  // integrante da la victoria a todo su equipo (combate.equipos), no solo a
+  // ese luchador. En combates individuales (1vs1, Triple Threat, Fatal 4-Way)
+  // no hay equipos y se mantiene el comportamiento de siempre.
+  const equipoGanador = Array.isArray(combate.equipos)
+    ? combate.equipos.find(equipo => equipo.includes(combate.ganadorId))
+    : null;
+  const ganadores = equipoGanador ? new Set(equipoGanador) : new Set([combate.ganadorId]);
+
   for (const participante of combate.participantes) {
     const luchadorId = participante.id;
     const registro = obtenerRegistro(temporada, luchadorId);
     const victoriasActuales = registro?.victoriasAcum ?? 0;
     const derrotasActuales = registro?.derrotasAcum ?? 0;
     actualizarAcumulados(estado, temporadaId, luchadorId, {
-      victoriasAcum: victoriasActuales + (luchadorId === combate.ganadorId ? 1 : 0),
-      derrotasAcum: derrotasActuales + (luchadorId === combate.ganadorId ? 0 : 1),
+      victoriasAcum: victoriasActuales + (ganadores.has(luchadorId) ? 1 : 0),
+      derrotasAcum: derrotasActuales + (ganadores.has(luchadorId) ? 0 : 1),
     });
   }
   combate.resultadoRegistrado = true;
+
+  // Si con este registro quedaron los 18 combates de Miércoles y Jueves
+  // registrados, la cartelera actual queda terminada. No existe una
+  // variable de "generador" separada: estado.calendario.miercoles/jueves
+  // ES el estado del generador (se guarda entero en localStorage junto con
+  // el resto de `estado`). Restablecerlo es vaciar esos dos arreglos; nada
+  // más de `estado` (Temporada, Exposición, Roster, Equipos, config) se toca.
+  const todosRegistrados = [...calendario.miercoles, ...calendario.jueves].every(c => c.resultadoRegistrado);
+  if (calendario.miercoles.length === 9 && calendario.jueves.length === 9 && todosRegistrados) {
+    calendario.miercoles = [];
+    calendario.jueves = [];
+  }
+
   return combate;
 }
 
