@@ -58,7 +58,8 @@ function renderCalendario(estado, contenedor, guardarYRefrescar) {
   };
 
   const renderCombate = (combate, indice, dia) => {
-    const info = TIPOS_COMBATE_CALENDARIO[combate.tipo] || TIPOS_COMBATE_CALENDARIO["1vs1"];
+    const info = TIPOS_COMBATE_CALENDARIO[combate.tipo] || null;
+    const combateVacio = combate.tipo === null;
     const participantesCombate = combate.participantes.map((p, i) => ({ p, i, w: obtenerLuchadorParaHistorial(estado, p.id) }));
     const ganador = combate.ganadorId;
     const registrado = combate.resultadoRegistrado;
@@ -66,7 +67,7 @@ function renderCalendario(estado, contenedor, guardarYRefrescar) {
     // El bloqueo impide regenerar/cambiar la composición (tipo, género,
     // reemplazo puntual), pero no impide registrar un resultado.
     const composicionBloqueada = registrado || bloqueado;
-    const selectGanador = `<select data-cal-ganador="${combate.id}" ${registrado ? "disabled" : ""}>
+    const selectGanador = `<select data-cal-ganador="${combate.id}" ${registrado || combateVacio ? "disabled" : ""}>
       <option value="">Elegir ganador...</option>
       ${participantesCombate.map(({p,w}) => `<option value="${w.id}" ${ganador === w.id ? "selected" : ""}>${esc(w.nombre)}</option>`).join("")}
     </select>`;
@@ -98,7 +99,7 @@ function renderCalendario(estado, contenedor, guardarYRefrescar) {
       { valor: "", label: "🎲 Aleatorio" },
       { valor: "Hombre", label: "👨 Hombres" },
       { valor: "Mujer", label: "👩 Mujeres" },
-    ].map(o => `<option value="${o.valor}" ${generoActual === o.valor ? "selected" : ""}>${o.label}</option>`).join("");
+    ].map(o => `<option value="${o.valor}" ${!combateVacio && generoActual === o.valor ? "selected" : ""}>${o.label}</option>`).join("");
 
     return `<article class="cal-combate ${registrado ? "cal-registrado" : ""} ${bloqueado ? "cal-bloqueado" : ""}">
       <div class="cal-combate-cabecera">
@@ -106,15 +107,22 @@ function renderCalendario(estado, contenedor, guardarYRefrescar) {
         <span>${registrado ? "✅ Resultado registrado" : bloqueado ? "🔒 Bloqueado" : "Pendiente"}</span>
       </div>
       <div class="cal-combate-controles">
-        <label>Tipo<select data-cal-tipo="${dia}|${combate.id}" ${composicionBloqueada ? "disabled" : ""}>${opcionesTipo.replace(`value="${combate.tipo}"`, `value="${combate.tipo}" selected`)}</select></label>
-        <label>Género<select data-cal-genero="${dia}|${combate.id}" ${composicionBloqueada ? "disabled" : ""}>${opcionesGenero}</select></label>
+        <label>Tipo<select data-cal-tipo="${dia}|${combate.id}" ${composicionBloqueada ? "disabled" : ""}>
+          <option value="" ${combateVacio ? "selected" : ""}>-</option>
+          ${opcionesTipo.replace(`value="${combate.tipo}"`, `value="${combate.tipo}" selected`)}
+        </select></label>
+        <label>Género<select data-cal-genero="${dia}|${combate.id}" ${composicionBloqueada ? "disabled" : ""}>
+          <option value="__vacio__" ${combateVacio && !combate.generoForzado ? "selected" : ""}>-</option>
+          ${opcionesGenero}
+        </select></label>
       </div>
       <div class="cal-combate-acciones">
-        <button type="button" class="accion secundaria" data-cal-regenerar="${dia}|${combate.id}" ${composicionBloqueada ? "disabled" : ""}>🔄 Regenerar</button>
+        <button type="button" class="accion secundaria" data-cal-regenerar="${dia}|${combate.id}" ${composicionBloqueada || combateVacio ? "disabled" : ""}>🔄 Regenerar</button>
         <button type="button" class="accion secundaria" data-cal-bloquear="${dia}|${combate.id}" ${registrado ? "disabled" : ""}>${bloqueado ? "🔓 Desbloquear" : "🔒 Bloquear"}</button>
+        <button type="button" class="accion secundaria" data-cal-vaciar="${dia}|${combate.id}" ${registrado || bloqueado || combateVacio ? "disabled" : ""}>🧹 Dejar en blanco</button>
       </div>
       ${participantesHtml}
-      <div class="cal-ganador"><label>Ganador ${selectGanador}</label>${registrado ? "" : `<button class="accion" data-cal-registrar="${dia}|${combate.id}">🏆 Registrar resultado</button>`}</div>
+      <div class="cal-ganador"><label>Ganador ${selectGanador}</label>${registrado ? "" : `<button class="accion" data-cal-registrar="${dia}|${combate.id}" ${combateVacio ? "disabled" : ""}>🏆 Registrar resultado</button>`}</div>
     </article>`;
   };
 
@@ -248,7 +256,11 @@ function renderCalendario(estado, contenedor, guardarYRefrescar) {
       const combate = calendario[dia].find(c => c.id === id);
       if (!combate) return;
       try {
-        cambiarTipoCombateCalendario(estado, combate, select.value, calendario);
+        if (!select.value) {
+          if (combate.tipo !== null) return;
+        } else {
+          cambiarTipoCombateCalendario(estado, combate, select.value, calendario);
+        }
         calendarioCambioActivo = null;
         guardarYRefrescar();
       } catch (e) {
@@ -264,7 +276,8 @@ function renderCalendario(estado, contenedor, guardarYRefrescar) {
       const combate = calendario[dia].find(c => c.id === id);
       if (!combate) return;
       try {
-        cambiarGeneroCombateCalendario(estado, combate, select.value || null, calendario);
+        const genero = select.value === "__vacio__" ? null : (select.value || null);
+        cambiarGeneroCombateCalendario(estado, combate, genero, calendario);
         calendarioCambioActivo = null;
         guardarYRefrescar();
       } catch (e) {
@@ -294,6 +307,19 @@ function renderCalendario(estado, contenedor, guardarYRefrescar) {
       if (!combate) return;
       try {
         alternarBloqueoCombateCalendario(combate);
+        calendarioCambioActivo = null;
+        guardarYRefrescar();
+      } catch (e) { alert(e.message); }
+    };
+  });
+
+  contenedor.querySelectorAll("[data-cal-vaciar]").forEach(button => {
+    button.onclick = () => {
+      const [dia, id] = button.dataset.calVaciar.split("|");
+      const combate = calendario[dia].find(c => c.id === id);
+      if (!combate) return;
+      try {
+        vaciarCombateCalendario(combate);
         calendarioCambioActivo = null;
         guardarYRefrescar();
       } catch (e) { alert(e.message); }

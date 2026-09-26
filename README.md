@@ -1,130 +1,157 @@
-# WWE Universe Tracker v1.0.0
+# WWE Universe Tracker
 
-Aplicación web personal para gestionar un **WWE 2K Universe Mode** con HTML, CSS y JavaScript vanilla.
+Aplicación web personal para gestionar un **WWE 2K Universe Mode**
+mediante HTML, CSS y JavaScript vanilla.
 
-No usa React, APIs, base de datos externa ni autenticación.
+No utiliza React, backend, APIs externas, base de datos ni
+autenticación.
 
-La aplicación está pensada para uso personal en PC, tablet y teléfono.
+Está pensada para uso personal en PC, tablet y teléfono.
 
----
+------------------------------------------------------------------------
 
 ## Tecnologías
 
-* HTML
-* CSS
-* JavaScript vanilla
-* `localStorage`
-* JSON para exportación/importación de backups
+-   HTML
+-   CSS
+-   JavaScript vanilla
+-   `localStorage`
+-   JSON para exportación/importación de backups
 
 Arquitectura modular:
 
-```text
+``` text
 data/
 logic/
 ui/
 ```
 
----
+El estado principal de la aplicación se mantiene en un estado central y
+se persiste en `localStorage`.
 
-# Datos
+------------------------------------------------------------------------
 
-Los datos iniciales reales están en:
+# Datos y persistencia
 
-```text
+Los datos iniciales del Universo se encuentran en:
+
+``` text
 js/data/seedData.js
 ```
 
-Se cargan una sola vez en un navegador nuevo.
+Los datos iniciales se utilizan al crear el estado del Universo por
+primera vez en un navegador.
 
-Después de esa carga inicial, el estado de la aplicación vive en `localStorage`.
+Después de esa carga inicial, la aplicación trabaja con los datos
+guardados en `localStorage`.
 
 La aplicación no vuelve a leer `seedData.js` en cada carga.
 
-Para realizar backups se utiliza la función **Exportar**, que genera un archivo JSON.
+Para realizar backups se utiliza **Exportar**, que genera un archivo
+JSON.
 
-También existe la posibilidad de importar un backup para recuperar el estado del Universo.
+También se puede utilizar **Importar** para recuperar un backup del
+Universo.
 
-La aplicación conserva:
+La aplicación conserva, entre otros:
 
-* Roster
-* Shows
-* WM2
-* WM3
-* Campeonatos
-* Historial de títulos
-* Temporadas
-* Exposición
-* Comparación WWE 2K25 / WWE 2K26
-* Teams & Stables
-* Configuración y datos del Calendario
+-   Roster
+-   Shows
+-   WM2
+-   WM3
+-   Campeonatos
+-   Historial de títulos
+-   Temporadas
+-   Exposición
+-   Comparación WWE 2K25 / WWE 2K26
+-   Teams & Stables
+-   Configuración del Calendario
+-   Carteleras y resultados del Calendario
 
-La migración interna de v1.0 convierte el antiguo show único del roster a `shows[]` sin perder la asignación existente.
+La información de `localStorage` pertenece al navegador utilizado.
 
----
+------------------------------------------------------------------------
 
-# Funciones
+# Roster
 
-## Roster
+El módulo Roster permite administrar los luchadores del Universo.
 
-* Roster completo de luchadores.
-* Múltiples shows simultáneos por luchador.
-* RAW, SmackDown, NXT y Retired.
-* Búsqueda.
-* Filtros combinables.
-* Ordenamiento.
-* Edición inline del luchador.
-* Agregar y eliminar luchadores.
-* Overall base y actual.
-* Edad base y actual.
-* Eliminación del roster sincronizada con Teams & Stables.
+Características:
 
-Eliminar un luchador del Roster no elimina su historial de títulos.
+-   Roster completo de luchadores.
+-   Múltiples shows simultáneos por luchador.
+-   RAW, SmackDown, NXT y Retired.
+-   Búsqueda.
+-   Filtros combinables.
+-   Ordenamiento.
+-   Edición inline.
+-   Agregar y eliminar luchadores.
+-   Overall base y actual.
+-   Edad base y actual.
 
----
+La edición inline aparece debajo de la fila del luchador que se está
+editando.
 
-## Temporadas
+Eliminar un luchador del Roster sincroniza las referencias
+correspondientes en Teams & Stables, pero no elimina su historial de
+títulos.
 
-* Temporadas dinámicas.
-* Creación.
-* Edición.
-* Apertura y cierre.
-* Reapertura.
-* Reset.
-* Eliminación.
-* Advertencias cuando existen dependencias.
+------------------------------------------------------------------------
 
----
+# Temporadas
 
-## Títulos
+Permite administrar las temporadas del Universo.
 
-* Gestión de los campeonatos del Universo.
-* Campeones actuales.
-* Historial de campeonatos.
-* Registro de luchadores por campeonato.
-* Datos de campeonatos independientes del resto del Universo.
+Características:
 
-La selección de campeonatos utiliza un selector porque existe una cantidad reducida de opciones.
+-   Creación de temporadas.
+-   Edición.
+-   Apertura y cierre.
+-   Reapertura.
+-   Reset.
+-   Eliminación.
+-   Advertencias cuando existen dependencias.
+
+El Calendario registra sus resultados en la temporada actual.
+
+------------------------------------------------------------------------
+
+# Títulos
+
+Gestión de los campeonatos del Universo.
+
+Incluye:
+
+-   Campeones actuales.
+-   Historial de campeonatos.
+-   Registro de luchadores por campeonato.
+-   Gestión independiente de los datos de títulos.
 
 La selección de luchadores utiliza el buscador reutilizable.
 
----
+------------------------------------------------------------------------
 
-## Historial
+# Historial
 
-* Historial de campeonatos.
-* Registro de cambios de campeón.
-* Selector de datos con pocas opciones.
-* Se mantiene el selector tradicional para este módulo.
+Módulo destinado al historial de campeonatos.
 
----
+Incluye:
 
-## Exposición
+-   Registro de cambios de campeón.
+-   Consulta del historial.
+-   Selectores tradicionales donde existe una cantidad reducida de
+    opciones.
 
-Permite administrar manualmente la exposición de los luchadores por temporada.
+------------------------------------------------------------------------
+
+# Exposición
+
+Permite administrar manualmente qué luchadores forman parte de la
+Exposición de una temporada.
 
 Columnas principales:
 
-```text
+``` text
 Luchador
 Show actual
 Temporada
@@ -137,356 +164,649 @@ Racha/Tendencia
 Prioridad
 ```
 
-Las estadísticas derivadas utilizan los datos existentes de Temporadas.
+## Participación
 
-### Prioridad del Calendario
+La participación se clasifica mediante texto:
 
-El generador utiliza la siguiente prioridad:
+``` text
+0–10    → Poca
+11–30   → Media
+31–40   → Alta
+41+     → Mucha
+```
 
-1. Balance negativo.
-2. Participación Poca.
-3. Prioridad 3.
-4. Prioridad 4.
+## Racha / Tendencia
 
-La prioridad es un orden de preferencia y no una restricción absoluta.
+La tendencia se determina mediante el balance:
 
-El generador debe evitar repetir luchadores cuando existan alternativas válidas.
+``` text
+Balance <= 0   → Mala
+1              → Parejo
+2–10           → Buena
+11–29          → Muy bueno
+30+            → Excelente
+```
 
----
+## Prioridad utilizada por el Calendario
 
-## Overall
+El generador del Calendario utiliza cinco niveles:
 
-Editor de Overall sobre el roster existente.
+``` text
+P1 → balance <= 0
+P2 → balance = 1
+P3 → balance 2–10
+P4 → balance 11–29
+P5 → balance >= 30
+```
 
-No crea una fuente de datos separada.
+La prioridad sirve para decidir qué luchadores de Exposición deben
+recibir protagonismo primero.
 
----
+El generador intenta cubrir a los luchadores de mayor prioridad antes de
+pasar a prioridades inferiores, siempre respetando las estructuras de
+combate disponibles.
 
-## Comparación WWE 2K25 / WWE 2K26
+Un luchador puede considerarse cubierto aunque participe como compañero
+dentro de un Tag o Stable.
 
-Comparación dinámica y ordenable de los datos de ambas versiones.
+------------------------------------------------------------------------
 
-Utiliza la misma interfaz y los mismos datos del Universo.
+# Overall
 
----
+Editor del Overall de los luchadores existentes en el Roster.
+
+No crea una fuente de datos independiente.
+
+El Calendario utiliza el Overall actual normalizado de cada luchador.
+
+Para los oponentes se **prefieren** luchadores con Overall `<= 80`.
+
+El límite de 80 es una preferencia de selección y no una exclusión
+absoluta: si no existen candidatos adecuados dentro de ese grupo, el
+generador puede utilizar otros Overall disponibles.
+
+------------------------------------------------------------------------
+
+# Comparación WWE 2K25 / WWE 2K26
+
+Permite comparar dinámicamente los datos correspondientes a ambas
+versiones.
+
+La comparación utiliza los datos existentes del Universo y permite
+ordenar la información.
+
+------------------------------------------------------------------------
 
 # Calendario
 
-El módulo Calendario genera actualmente dos carteleras:
+El Calendario es el generador de carteleras del Universo.
 
-* Miércoles
-* Jueves
+Actualmente genera:
 
-Cada cartelera contiene 9 combates.
+``` text
+Miércoles → 9 combates
+Jueves    → 9 combates
 
-El Calendario utiliza los luchadores seleccionados en **Exposición** como protagonistas y el roster general para los oponentes.
-
-Las prioridades y estadísticas se calculan utilizando los datos existentes de Exposición y Temporadas.
-
-Al registrar un resultado, se actualizan los acumulados de la temporada mediante las funciones existentes.
-
-## Reglas actuales del generador
-
-* Los protagonistas pertenecen a Exposición.
-* Los oponentes se buscan en el roster general.
-* Los oponentes deben ser del mismo género.
-* Se priorizan oponentes con Overall ≤75.
-* Un luchador seleccionado en Exposición no debe utilizarse como oponente.
-* Se evitan duplicados cuando existen alternativas válidas.
-* La prioridad de Exposición se respeta siempre que sea posible.
-* El usuario puede modificar manualmente las propuestas.
-* El Calendario propone, el usuario decide.
-* El botón `Cambiar` permite reemplazar participantes individualmente.
-* Los cambios manuales pueden generar advertencias por duplicados, pero no bloquean al usuario.
-* Cambiar el tipo de combate debe conservar los participantes existentes siempre que sea posible y agregar/quitar únicamente los necesarios.
-
-## Próxima integración del Calendario
-
-El generador será actualizado para utilizar **Teams & Stables** como fuente de contexto para los combates por equipos.
-
-Los tipos definitivos serán:
-
-1. **1 vs 1**
-2. **Tag Team (2 vs 2)**
-3. **Triple Threat**
-4. **Fatal 4-Way**
-5. **6 Tag Match (3 vs 3)**
-6. **Triple Tag Match (2 vs 2 vs 2)**
-
-La configuración de probabilidades estará dentro del módulo Calendario.
-
-Cada tipo tendrá un porcentaje configurable y el total deberá ser exactamente 100%.
-
-Ejemplo:
-
-```text
-1 vs 1                  [  ]
-Tag Team (2 vs 2)       [  ]
-Triple Threat           [  ]
-Fatal 4-Way             [  ]
-6 Tag Match (3 vs 3)    [  ]
-Triple Tag Match        [  ]
-
-Total: 100%
+Total → 18 combates
 ```
 
-Las probabilidades serán ponderadas; no significa que cada cartelera tenga que respetar exactamente esos porcentajes.
+Los dos shows comparten un control global de apariciones para evitar
+repetir innecesariamente a los mismos luchadores entre ambas carteleras.
 
----
+## Tipos de combate
+
+Actualmente existen seis tipos:
+
+1.  **1 vs 1**
+2.  **2 vs 2**
+3.  **Triple Threat**
+4.  **Fatal 4-Way**
+5.  **3 vs 3**
+6.  **2 vs 2 vs 2**
+
+Las probabilidades actuales son:
+
+``` text
+1 vs 1       → 30%
+2 vs 2       → 25%
+Triple Threat → 15%
+Fatal 4-Way  → 10%
+3 vs 3       → 10%
+2 vs 2 vs 2  → 10%
+```
+
+Total:
+
+``` text
+100%
+```
+
+Las probabilidades son ponderadas. No significa que cada cartelera tenga
+que respetar exactamente esos porcentajes.
+
+Además, cada show limita a un máximo de 3 combates de cada tipo durante
+la generación.
+
+------------------------------------------------------------------------
+
+## Protagonistas
+
+Los protagonistas se obtienen de los luchadores seleccionados en
+**Exposición**.
+
+El generador prioriza:
+
+1.  P1
+2.  P2
+3.  P3
+4.  P4
+5.  P5
+
+Dentro de una misma prioridad, la selección puede ser aleatoria.
+
+La lógica intenta cubrir a todos los P1 a lo largo de las 18 posiciones
+cuando las estructuras disponibles lo permiten.
+
+La prioridad decide el **ancla o protagonista** del combate.
+
+Los Tags y Stables determinan los acompañantes cuando existe una
+estructura válida.
+
+------------------------------------------------------------------------
+
+## Tags y Stables en el Calendario
+
+El Calendario utiliza las estructuras existentes en **Teams & Stables**.
+
+Cuando corresponde, puede utilizar:
+
+-   Tag Teams reales.
+-   Stables reales.
+-   Tags derivados de Stables.
+-   Equipos temporales cuando no existe una estructura real adecuada.
+
+Los equipos temporales generados por el Calendario **no se guardan** en
+`estado.equipos`.
+
+La prioridad de Exposición no se aplica de forma independiente a todos
+los miembros de un Stable: determina principalmente el protagonista que
+activa la estructura.
+
+------------------------------------------------------------------------
+
+## Oponentes
+
+Los oponentes se obtienen del Roster general.
+
+Reglas principales:
+
+-   No pueden pertenecer a Exposición.
+-   Deben respetar el género del combate.
+-   Se prefieren Overall `<= 80`.
+-   Se intenta utilizar primero a los oponentes con menos apariciones en
+    la cartelera.
+-   Se evitan repeticiones innecesarias cuando existen alternativas
+    válidas.
+-   Si no existen candidatos adecuados dentro del grupo preferido, se
+    puede recurrir a otros oponentes disponibles.
+
+Los Tags y Stables reales de los oponentes se utilizan cuando todavía no
+fueron utilizados en la cartelera.
+
+Una vez agotadas las estructuras reales disponibles, el generador
+utiliza equipos temporales en lugar de repetir indefinidamente los
+mismos Tags o Stables.
+
+Esto también se aplica a equipos de 3 integrantes.
+
+------------------------------------------------------------------------
+
+## Cambiar
+
+Cada combate permite modificar individualmente sus participantes
+mediante **Cambiar**.
+
+El buscador de cambio:
+
+-   Respeta el género del combate.
+-   Excluye al luchador actualmente seleccionado.
+-   Excluye luchadores que ya aparecen en otros combates de la
+    cartelera.
+-   Utiliza IDs internos, no nombres.
+-   Prioriza visualmente los oponentes con Overall `<= 80`.
+-   Permite seleccionar manualmente otra opción disponible.
+
+El generador propone; la decisión final queda en manos del usuario.
+
+------------------------------------------------------------------------
+
+## Regenerar
+
+Cada combate puede regenerarse individualmente.
+
+La regeneración utiliza el mismo motor de generación que la creación de
+la cartelera.
+
+También existe la posibilidad de regenerar la cartelera completa.
+
+------------------------------------------------------------------------
+
+## Bloquear
+
+Un combate puede bloquearse para conservar su composición.
+
+Los combates bloqueados:
+
+-   No se regeneran.
+-   No se modifican mediante los controles de regeneración.
+-   Se mantienen al utilizar la regeneración global.
+
+Esto permite fijar manualmente combates que ya fueron aceptados y seguir
+trabajando sobre el resto de la cartelera.
+
+------------------------------------------------------------------------
+
+## Cambiar género
+
+Cada combate puede forzarse a:
+
+``` text
+🎲 Aleatorio
+👨 Hombres
+👩 Mujeres
+```
+
+Al cambiar el género se reconstruye el combate utilizando el mismo motor
+de generación.
+
+------------------------------------------------------------------------
+
+## Cambiar tipo de combate
+
+El tipo de combate puede cambiarse individualmente.
+
+Al hacerlo, la aplicación intenta conservar los participantes que siguen
+siendo válidos y completar o reducir la composición según sea necesario.
+
+La lógica continúa respetando las reglas de protagonistas, oponentes,
+género, Tags, Stables y equipos temporales.
+
+------------------------------------------------------------------------
+
+## Dejar en blanco
+
+Cada posición de la cartelera puede utilizar:
+
+**🧹 Dejar en blanco**
+
+Esta opción no elimina la posición del combate.
+
+Por ejemplo:
+
+``` text
+Combate 1
+Combate 2
+Combate 3 → vacío
+Combate 4
+```
+
+El combate vacío conserva su posición, pero elimina:
+
+-   Tipo de combate.
+-   Género.
+-   Participantes.
+-   Equipos.
+-   Ganador.
+-   Estado correspondiente del combate.
+
+La posición queda disponible para que el usuario pueda decidirla
+posteriormente.
+
+Cuando está vacío, el género se muestra como:
+
+``` text
+-
+```
+
+Los participantes también se eliminan realmente de la estructura interna
+del combate, no solamente de la interfaz.
+
+------------------------------------------------------------------------
+
+## Resultados
+
+Cada combate permite seleccionar un ganador y registrar el resultado.
+
+Al registrar un combate:
+
+-   El ganador obtiene una victoria.
+-   Los perdedores obtienen una derrota.
+-   En combates por equipos, todos los integrantes del equipo ganador
+    reciben victoria.
+-   Todos los integrantes del equipo perdedor reciben derrota.
+-   Los datos se acumulan en la temporada correspondiente.
+-   Los datos utilizados por Exposición se actualizan a partir de los
+    acumulados existentes.
+
+El resultado registrado no puede modificarse mediante los controles
+normales del combate.
+
+------------------------------------------------------------------------
+
+## Reinicio automático de la cartelera
+
+Cuando los 18 combates de Miércoles y Jueves fueron registrados:
+
+``` text
+9 Miércoles → registrados
+9 Jueves    → registrados
+-------------------------
+18 / 18
+```
+
+el Calendario limpia las carteleras generadas para permitir una nueva
+generación.
+
+No se elimina:
+
+-   La temporada actual.
+-   La configuración.
+-   Los datos de Exposición.
+-   Los resultados acumulados.
+-   Los datos de Teams & Stables.
+
+La siguiente generación crea una cartelera nueva.
+
+------------------------------------------------------------------------
 
 # Teams & Stables
 
-Módulo para administrar la estructura actual de equipos y grupos del Universo.
+Módulo para administrar Tags y Stables del Universo.
 
 Los datos viven en:
 
-```text
+``` text
 estado.equipos
 ```
 
 con la estructura:
 
-```text
+``` text
 {
     stables: [],
     tagTeams: []
 }
 ```
 
-Se almacenan dentro del mismo estado central de la aplicación, junto con el resto de los datos.
+También forman parte de Exportar/Importar.
 
-También se incluyen en Exportar/Importar.
+------------------------------------------------------------------------
 
-### Stables / Grupos
+## Stables
 
 Un Stable puede tener uno o más miembros.
 
 Un luchador puede pertenecer a un solo Stable al mismo tiempo.
 
-Si un Stable queda sin miembros, se elimina automáticamente junto con sus Tag Teams derivados.
+Si un Stable queda sin miembros:
 
-### Tag Teams
+-   Se elimina el Stable.
+-   Se eliminan sus Tags derivados.
 
-Un Tag Team tiene exactamente 2 luchadores.
+Los luchadores permanecen en el Roster.
+
+------------------------------------------------------------------------
+
+## Tag Teams
+
+Un Tag Team tiene exactamente dos luchadores.
 
 Un luchador puede pertenecer a varios Tag Teams.
 
 Un Tag Team puede existir independientemente de cualquier Stable.
 
-### Tag Teams derivados
+------------------------------------------------------------------------
 
-Desde un Stable se puede crear un Tag Team derivado.
+## Tags derivados de Stables
+
+Desde un Stable se pueden crear Tags derivados.
 
 Ejemplo:
 
-```text
+``` text
 The Bloodline
 ├── Roman Reigns
 ├── Jey Uso
 ├── Jimmy Uso
 └── Jacob Fatu
 
-Tag Team derivado:
 The Usos
 Jey Uso + Jimmy Uso
 ```
 
-El Tag Team derivado solo puede utilizar miembros del Stable de origen.
+Un Tag derivado solamente puede utilizar miembros del Stable de origen.
 
-Cada Stable y Tag Team tiene un ID interno estable e independiente del nombre.
+Los Stable y Tag Team tienen IDs internos independientes del nombre.
 
-Los nombres son completamente editables.
+Los nombres son editables sin utilizar el nombre como identificador.
 
 Si se elimina un Stable:
 
-* Se elimina el Stable.
-* Se eliminan sus Tag Teams derivados.
-* Los luchadores permanecen en el Roster.
-* Un Tag Team eliminado puede volver a crearse posteriormente como Tag Team independiente.
+-   Se elimina el Stable.
+-   Se eliminan sus Tags derivados.
+-   Los luchadores permanecen en el Roster.
+-   Los Tags independientes permanecen.
 
-Los Tag Teams independientes no se eliminan al modificar o eliminar otros Stables.
+------------------------------------------------------------------------
 
-### Integración con el Calendario
+## Buscador de Teams & Stables
 
-El Calendario utiliza los Tags y Stables existentes como contexto para generar combates por equipos.
+El módulo utiliza un único buscador para Stables y Tags.
 
-Cuando corresponde, el generador puede utilizar estructuras reales de Tags y Stables para completar los equipos.
+La búsqueda se realiza por:
 
-La prioridad de Exposición determina el protagonista o ancla del combate, mientras que el Tag o Stable determina los acompañantes cuando existe una estructura válida.
-
-Los equipos temporales utilizados por el generador no se guardan como nuevos equipos en `estado.equipos`.
-
-### Buscador
-
-El módulo dispone de un único buscador para **Stables y Tags**.
-
-Permite buscar en tiempo real por:
-
-* Nombre del Stable.
-* Nombre del Tag Team.
-* Nombre de cualquiera de sus integrantes.
+-   Nombre del Stable.
+-   Nombre del Tag Team.
+-   Nombre de cualquiera de sus integrantes.
 
 Ejemplos:
 
-```text
+``` text
 Tatum
 → Allies of Convenience
 ```
 
-```text
+``` text
 Gargano
 → #DIY
 ```
 
-Si la búsqueda no encuentra resultados, se muestra un mensaje indicando que no se encontraron Stables ni Tags.
+Si no hay resultados, se informa que no se encontraron Stables ni Tags.
 
-### Archivos principales
+------------------------------------------------------------------------
 
-```text
+## Archivos principales
+
+``` text
 js/logic/equipos.js
 js/ui/equipos-ui.js
 ```
 
-Consultas utilizadas por el resto de la aplicación:
-
-```text
-listarTagTeams
-listarStables
-tagTeamsDeLuchador
-stableDeLuchador
-tagTeamsDerivados
-resolverEquipo
-```
-
----
+------------------------------------------------------------------------
 
 # Buscador de luchadores
 
-Existe un componente reutilizable para reemplazar los selectores enormes con los aproximadamente 165 luchadores del roster.
+Existe un componente reutilizable para trabajar con el Roster sin
+depender de selectores enormes.
 
 Archivo:
 
-```text
+``` text
 js/ui/buscador-luchador-ui.js
 ```
 
 Características:
 
-* Búsqueda por parte del nombre.
-* Ignora mayúsculas/minúsculas.
-* Ignora tildes.
-* Selección mediante clic.
-* Navegación con ↑ / ↓.
-* Confirmación con Enter.
-* El luchador seleccionado queda visible con ✓.
-* El ID seleccionado se mantiene en un `input hidden`.
-* Mantiene compatibilidad con la lógica existente que utilizaba `select.value`.
+-   Búsqueda parcial.
+-   Ignora mayúsculas y minúsculas.
+-   Ignora tildes.
+-   Selección mediante clic.
+-   Navegación con ↑ / ↓.
+-   Confirmación con Enter.
+-   Muestra el luchador seleccionado con ✓.
+-   Conserva el ID seleccionado mediante `input hidden`.
+-   Mantiene compatibilidad con la lógica anterior basada en
+    `select.value`.
 
-Ejemplo:
+Actualmente se utiliza en:
 
-```text
-balor
-→ Finn Bálor
+-   Títulos → Agregar luchador.
+-   Exposición → Luchador.
+-   Teams & Stables → miembros.
+-   Edición de Tags independientes.
+-   Otros formularios que necesitan buscar luchadores del Roster.
+
+Se mantienen selectores tradicionales donde la cantidad de opciones es
+pequeña o donde las opciones dependen de un grupo reducido, por ejemplo:
+
+-   Historial.
+-   Títulos → Campeonato.
+-   Exposición → Temporada.
+-   Tags derivados de un Stable.
+
+------------------------------------------------------------------------
+
+# Arquitectura
+
+Reglas principales de desarrollo:
+
+-   Mantener HTML, CSS y JavaScript vanilla.
+-   No introducir React.
+-   No crear backend salvo que se decida explícitamente en una versión
+    futura.
+-   No introducir APIs externas sin necesidad.
+-   Reutilizar el estado central.
+-   Reutilizar funciones existentes antes de crear nuevas.
+-   Evitar fuentes de datos duplicadas.
+-   Evitar refactors innecesarios.
+-   No modificar funcionalidades estables sin una razón concreta.
+-   Utilizar IDs internos estables.
+-   No utilizar nombres visibles como identificadores.
+-   Mantener separadas las responsabilidades entre `data/`, `logic/` y
+    `ui/`.
+
+La lógica de generación del Calendario se mantiene principalmente en:
+
+``` text
+js/logic/calendario.js
 ```
 
-```text
-ripl
-→ Rhea Ripley
+La interfaz del Calendario se mantiene principalmente en:
+
+``` text
+js/ui/calendario-ui.js
 ```
 
-### Actualmente se utiliza en:
+------------------------------------------------------------------------
 
-* Títulos → Agregar luchador.
-* Exposición → Luchador.
-* Teams & Stables → Primer miembro.
-* Teams & Stables → Agregar miembro.
-* Teams & Stables → Luchador 1 y 2.
-* Edición de Tag Teams independientes.
-
-### Se mantienen selectores tradicionales en:
-
-* Historial.
-* Títulos → Campeonato.
-* Exposición → Temporada.
-* Tag Teams derivados de un Stable, porque solo muestran los pocos miembros disponibles del Stable.
-
-En Títulos → Agregar luchador también existe filtro por género:
-
-* Todos
-* Hombres
-* Mujeres
-
----
-
-# Arquitectura y reglas de desarrollo
-
-* Mantener HTML, CSS y JavaScript vanilla.
-* No introducir React.
-* No introducir backend salvo que se decida explícitamente en una versión futura.
-* No introducir APIs externas sin necesidad.
-* No crear fuentes de datos duplicadas.
-* Reutilizar el estado central existente.
-* Reutilizar funciones existentes antes de crear nuevas.
-* No modificar funcionalidades que ya funcionan.
-* Evitar refactors innecesarios.
-* Los nombres visibles pueden cambiar; nunca utilizar el nombre como identificador interno.
-* Utilizar IDs internos estables para relacionar entidades.
-* Mantener separadas las responsabilidades entre `data/`, `logic/` y `ui/`.
-
----
-
-# Git / desarrollo por módulos
+# Git y desarrollo por módulos
 
 El proyecto se desarrolla mediante ramas por funcionalidad.
 
 Ejemplo:
 
-```text
+``` text
 master
+├── feature/roster
 ├── feature/exposicion
 ├── feature/calendario
-└── feature/calendar-stables-tags
 ```
 
 Flujo habitual:
 
-```text
-feature → probar → commit → push → merge → master
+``` text
+feature
+   ↓
+probar
+   ↓
+commit
+   ↓
+push
+   ↓
+GitHub
+   ↓
+merge
+   ↓
+master
 ```
 
-Cada módulo importante debe probarse antes de fusionarse con `master`.
+Los cambios nuevos deben probarse antes de fusionarse con `master`.
 
----
+No se recomienda subir archivos de prueba, copias de seguridad o
+archivos duplicados de código a la rama final.
+
+------------------------------------------------------------------------
+
+# Archivos de prueba
+
+Antes de hacer commit y push se deben revisar especialmente archivos con
+nombres como:
+
+``` text
+archivo - copia.js
+archivo copia.js
+archivo_old.js
+archivo_backup.js
+```
+
+Estos archivos no forman parte de la aplicación si son únicamente copias
+utilizadas durante pruebas.
+
+Por ejemplo, si existe:
+
+``` text
+js/logic/calendario - copia.js
+```
+
+y es solamente una copia de prueba de `calendario.js`, debe eliminarse
+antes de subir la rama final.
+
+------------------------------------------------------------------------
 
 # Cómo abrir
 
-1. Descomprimir la carpeta.
-2. Abrir `index.html` con doble clic.
+1.  Descargar o descomprimir el proyecto.
+2.  Abrir `index.html`.
 
-No requiere servidor para el funcionamiento actual.
+La aplicación funciona actualmente sin necesidad de un servidor.
 
----
+------------------------------------------------------------------------
 
 # Backups
 
-Utilizar **Exportar** para guardar una copia JSON del Universo.
+Se recomienda utilizar **Exportar** antes de realizar cambios
+importantes.
 
-Se recomienda realizar backups antes de cambios importantes.
+El backup genera un archivo JSON con el estado actual del Universo.
 
-La información almacenada en `localStorage` pertenece al navegador utilizado.
+Si se elimina el `localStorage` del navegador, se pierde el estado
+actual guardado en ese navegador.
 
-Si se borra el `localStorage`, se pierde el estado actual de ese navegador y la aplicación vuelve a utilizar los datos iniciales.
+En ese caso, la aplicación vuelve a utilizar los datos iniciales
+disponibles para crear un nuevo Universo.
 
----
+------------------------------------------------------------------------
 
 # Futuro
 
-Funcionalidades previstas:
+Ideas y funcionalidades que pueden incorporarse posteriormente:
 
-* Fotos de luchadores.
-* Imágenes de títulos.
-* Mejoras visuales y de interfaz.
-* Posible sincronización entre PC y teléfono mediante backend en una versión futura.
-* Nuevas herramientas y mejoras para la gestión del Universo.
+-   Fotos de luchadores.
+-   Imágenes de títulos.
+-   Mejoras visuales y de interfaz.
+-   Nuevas herramientas para la gestión del Universo.
+-   Posible sincronización entre PC y teléfono mediante backend.
+-   Otras herramientas personales para el Universe Mode.
 
-La aplicación actualmente está pensada para uso personal y no requiere publicación en Google Play.
+La aplicación está pensada actualmente para uso personal y no requiere
+publicación en Google Play.

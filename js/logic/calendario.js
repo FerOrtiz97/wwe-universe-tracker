@@ -1,6 +1,6 @@
 // Reglas del módulo Calendario.
 // El Calendario propone combates: Exposición aporta los protagonistas y el
-// Roster general aporta preferentemente los oponentes de Overall <=75.
+// Roster general aporta preferentemente los oponentes de Overall <=80.
 
 const TIPOS_COMBATE_CALENDARIO = {
   "1vs1": { label: "1 vs 1", participantes: 2 },
@@ -67,12 +67,14 @@ function normalizarCalendario(estado) {
 
 function normalizarCombateCalendario(combate) {
   combate.id ??= `combate-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  combate.tipo ??= "1vs1";
+  // `null` representa una tarjeta deliberadamente vacía. Solo los combates
+  // nuevos/antiguos que no traen ningún tipo reciben el tipo normal 1vs1.
+  if (combate.tipo === undefined) combate.tipo = "1vs1";
   // Compatibilidad con carteleras anteriores: "sixTag" era el nombre viejo
   // del combate de 6 participantes. El Calendario actual usa exactamente
   // los seis tipos definidos arriba.
   if (combate.tipo === "sixTag") combate.tipo = "3vs3";
-  if (!TIPOS_COMBATE_CALENDARIO[combate.tipo]) combate.tipo = "1vs1";
+  if (combate.tipo !== null && !TIPOS_COMBATE_CALENDARIO[combate.tipo]) combate.tipo = "1vs1";
   const anteriores = Array.isArray(combate.participantes) ? combate.participantes : [];
   combate.participantes = anteriores.map((p, indice) => {
     if (typeof p === "string") return { id: p, rol: indice === 0 ? "protagonista" : "oponente" };
@@ -250,10 +252,10 @@ function elegirOponenteCalendario(oponentes, genero, usadosGlobales = new Set(),
   const base = oponentes.filter(w => w.genero === genero && !usadosLocal.has(w.id) && !excluirIds.has(w.id));
   if (!base.length) return null;
 
-  // Overall <=75 sigue siendo la preferencia principal. Dentro de ese grupo
+  // Overall <=80 sigue siendo la preferencia principal. Dentro de ese grupo
   // se favorecen las menores apariciones de la cartelera actual. Repetir no
   // está prohibido si las reglas de selección lo llevan a ser la alternativa.
-  const bajos = base.filter(w => w.overall <= 75);
+  const bajos = base.filter(w => w.overall <= 80);
   const grupo = bajos.length ? bajos : base;
   const minApariciones = Math.min(...grupo.map(w => aparicionesGlobales.get(w.id) || 0));
   const menosApariciones = grupo.filter(w => (aparicionesGlobales.get(w.id) || 0) === minApariciones);
@@ -303,8 +305,8 @@ function compararEquiposOponentesCalendario(a, b, mapaOponentes, aparicionesGlob
   if (a === b || (a.length === b.length && a.every((id, i) => id === b[i]))) return 0;
   const datosA = a.map(id => mapaOponentes.get(id)).filter(Boolean);
   const datosB = b.map(id => mapaOponentes.get(id)).filter(Boolean);
-  const bajosA = datosA.filter(w => w.overall <= 75).length;
-  const bajosB = datosB.filter(w => w.overall <= 75).length;
+  const bajosA = datosA.filter(w => w.overall <= 80).length;
+  const bajosB = datosB.filter(w => w.overall <= 80).length;
   if (bajosA !== bajosB) return bajosB - bajosA;
 
   // Si ambos equipos cumplen igual la preferencia de Overall, se elige el
@@ -345,10 +347,12 @@ function equiposTagValidosCalendario(estado, poolIds, genero, cantidad, usadosGl
     return base.filter(ids => ids.some(id => idsElegibles.has(id)));
   }
 
-  // Lado oponentes (Roster): no hay escala de prioridad; comportamiento sin cambios
-  // (se prefiere un Tag sin miembros repetidos y, si no hay ninguno, se permite repetir).
-  const sinRepetir = base.filter(ids => ids.every(id => !usadosGlobales.has(id)));
-  return sinRepetir.length ? sinRepetir : base;
+  // Lado oponentes (Roster): no hay escala de prioridad. Solo son candidatos los
+  // Tags reales cuyos integrantes todavía NO fueron usados en la cartelera actual;
+  // si no queda ninguno así, se devuelve vacío para que el llamador recurra al
+  // equipo temporal (equipoOponentesTemporalCalendario) en lugar de repetir un
+  // Tag real ya utilizado.
+  return base.filter(ids => ids.every(id => !usadosGlobales.has(id)));
 }
 
 function equiposTresValidosCalendario(estado, poolIds, genero, usadosGlobales, usadosLocal = new Set(), datosProtagonistas = null, aparicionesGlobales = new Map()) {
@@ -404,8 +408,11 @@ function equiposTresValidosCalendario(estado, poolIds, genero, usadosGlobales, u
     return candidatos.filter(ids => ids.some(id => idsElegibles.has(id)));
   }
 
-  const sinRepetir = candidatos.filter(ids => ids.every(id => !usadosGlobales.has(id)));
-  return sinRepetir.length ? sinRepetir : candidatos;
+  // Lado oponentes (Roster): mismo criterio que equiposTagValidosCalendario. Solo
+  // son candidatos los Stables/tríos reales cuyos integrantes todavía NO fueron
+  // usados en la cartelera actual; si no queda ninguno así, se devuelve vacío para
+  // que el llamador recurra al equipo temporal en lugar de repetir uno ya usado.
+  return candidatos.filter(ids => ids.every(id => !usadosGlobales.has(id)));
 }
 
 function elegirEquipoCalendario(candidatos, comparar, aleatorioEnEmpate = true) {
@@ -496,7 +503,7 @@ function tamanosEquipoOponentesCalendario(tipo) {
 
 // Analogo a completarEquipoProtagonistaCalendario pero para el lado OPONENTE
 // (usado al cambiar el tipo de combate). Reglas de la sección 17: los
-// oponentes no están en Exposición, tienen Overall <=75 preferente, mismo
+// oponentes no están en Exposición, tienen Overall <=80 preferente, mismo
 // género, y pueden usar Tags/Stables reales del Roster cuando corresponda.
 //  1) Si existe un Tag/Stable real que contiene a TODOS los ids de `base`
 //     (los oponentes que se conservan), ese equipo real determina el resto.
@@ -710,21 +717,41 @@ function generarCalendarioCompleto(estado) {
 function candidatosCambioCalendario(estado, combate, indiceParticipante) {
   const participante = combate.participantes[indiceParticipante];
   if (!participante) return [];
+
+  // Para Cambiar mostramos únicamente luchadores que todavía no están
+  // utilizados en OTRA tarjeta del Calendario. El participante actual queda
+  // fuera de ese conjunto para poder conservarlo/reemplazarlo.
+  const usadosEnOtrasTarjetas = new Set();
+  const calendario = normalizarCalendario(estado);
+  for (const otro of [...(calendario.miercoles ?? []), ...(calendario.jueves ?? [])]) {
+    if (otro.id === combate.id) continue;
+    for (const p of otro.participantes ?? []) usadosEnOtrasTarjetas.add(p.id);
+  }
+
   const actuales = new Set(combate.participantes.map(p => p.id));
   actuales.delete(participante.id);
   const genero = obtenerLuchadorParaHistorial(estado, participante.id)?.genero;
 
   if (participante.rol === "protagonista") {
-    const exposicion = datosParticipantesCalendario(estado).filter(w => w.genero === genero && !actuales.has(w.id));
-    return exposicion.sort((a, b) => a.prioridad - b.prioridad || a.balance - b.balance || a.totalCombates - b.totalCombates || a.nombre.localeCompare(b.nombre, "es"));
+    const exposicion = datosParticipantesCalendario(estado)
+      .filter(w => w.genero === genero && !actuales.has(w.id) && !usadosEnOtrasTarjetas.has(w.id));
+    return exposicion.sort((a, b) =>
+      a.prioridad - b.prioridad ||
+      a.balance - b.balance ||
+      a.totalCombates - b.totalCombates ||
+      a.nombre.localeCompare(b.nombre, "es")
+    );
   }
 
   const idsExposicion = new Set(datosParticipantesCalendario(estado).map(w => w.id));
   const roster = datosRosterOponentesCalendario(estado, idsExposicion)
-    .filter(w => w.genero === genero && !actuales.has(w.id));
-  const bajos = roster.filter(w => w.overall <= 75);
-  const altos = roster.filter(w => w.overall > 75);
-  return [...bajos.sort((a,b) => a.overall - b.overall || a.nombre.localeCompare(b.nombre,"es")), ...altos.sort((a,b) => a.overall - b.overall || a.nombre.localeCompare(b.nombre,"es"))];
+    .filter(w => w.genero === genero && !actuales.has(w.id) && !usadosEnOtrasTarjetas.has(w.id));
+  const bajos = roster.filter(w => w.overall <= 80);
+  const altos = roster.filter(w => w.overall > 80);
+  return [
+    ...bajos.sort((a,b) => a.overall - b.overall || a.nombre.localeCompare(b.nombre,"es")),
+    ...altos.sort((a,b) => a.overall - b.overall || a.nombre.localeCompare(b.nombre,"es"))
+  ];
 }
 
 function cambiarParticipanteCalendario(estado, combate, indiceParticipante, nuevoId) {
@@ -745,6 +772,30 @@ function cambiarParticipanteCalendario(estado, combate, indiceParticipante, nuev
 function cambiarTipoCombateCalendario(estado, combate, nuevoTipo, calendario) {
   if (!TIPOS_COMBATE_CALENDARIO[nuevoTipo]) throw new Error("Tipo de combate no válido.");
   if (combate.resultadoRegistrado) throw new Error("No se puede cambiar un combate con resultado registrado.");
+
+  // Una tarjeta vacía no tiene un protagonista de referencia. Al elegir un
+  // tipo, se puede volver a generar su composición desde cero usando las
+  // mismas reglas del Calendario.
+  if (!combate.participantes?.length) {
+    const exposicion = datosParticipantesCalendario(estado);
+    const idsExposicion = new Set(exposicion.map(w => w.id));
+    const oponentes = datosRosterOponentesCalendario(estado, idsExposicion);
+    const cal = calendario || normalizarCalendario(estado);
+    const usadosGlobales = new Set();
+    for (const otro of [...(cal.miercoles ?? []), ...(cal.jueves ?? [])]) {
+      if (otro.id === combate.id) continue;
+      for (const p of otro.participantes ?? []) usadosGlobales.add(p.id);
+    }
+    const resultado = construirParticipantesCalendario(
+      exposicion, oponentes, nuevoTipo, usadosGlobales, new Map(), estado, combate.generoForzado
+    );
+    if (!resultado) throw new Error("No hay suficientes luchadores válidos para armar este combate.");
+    combate.tipo = nuevoTipo;
+    combate.participantes = resultado.participantes;
+    combate.equipos = resultado.equipos;
+    combate.ganadorId = null;
+    return combate;
+  }
 
   const nuevoTotal = TIPOS_COMBATE_CALENDARIO[nuevoTipo].participantes;
   const cantidadProtagonistas = nuevoTipo === "2vs2" ? 2 : nuevoTipo === "3vs3" ? 3 : nuevoTipo === "2vs2vs2" ? 2 : 1;
@@ -848,6 +899,11 @@ function cambiarGeneroCombateCalendario(estado, combate, nuevoGenero, calendario
   if (!combate || combate.resultadoRegistrado) throw new Error("No se puede cambiar un combate con resultado registrado.");
   const generoValido = nuevoGenero === "Hombre" || nuevoGenero === "Mujer" ? nuevoGenero : null;
 
+  if (!combate.participantes?.length) {
+    combate.generoForzado = generoValido;
+    return combate;
+  }
+
   if (!generoValido) {
     combate.generoForzado = null;
     return combate;
@@ -908,6 +964,20 @@ function regenerarCombateCalendario(estado, combate, calendario) {
   combate.participantes = resultado.participantes;
   combate.equipos = resultado.equipos;
   combate.ganadorId = null;
+  return combate;
+}
+
+// 🧹 Dejar una tarjeta deliberadamente vacía. Conserva la tarjeta y su ID,
+// pero elimina únicamente su composición actual para que el usuario pueda
+// dejar ese espacio sin combate y reutilizarlo después.
+function vaciarCombateCalendario(combate) {
+  if (!combate) throw new Error("Combate no encontrado.");
+  if (combate.resultadoRegistrado) throw new Error("No se puede vaciar un combate con resultado registrado.");
+  combate.tipo = null;
+  combate.participantes = [];
+  combate.equipos = null;
+  combate.ganadorId = null;
+  combate.generoForzado = null;
   return combate;
 }
 
